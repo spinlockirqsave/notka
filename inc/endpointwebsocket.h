@@ -17,6 +17,8 @@ public:
          * @mode        Web socket security mode (ws/wss).
          */
         explicit EndPointWebSocket(QWebSocketServer::SslMode mode,
+                                   QHostAddress address,
+                                   quint16 port,
                                    QObject *parent = Q_NULLPTR);
         ~EndPointWebSocket();
 
@@ -40,9 +42,11 @@ private slots:
 
 private:
         QScopedPointer<QWebSocketServer>        ws_server;
-        QList<QWebSocket *>                     ws_clients;
         QHostAddress                            address;
         quint16                                 port;
+
+        /* QWebSocketServer owns the sockets pointers. */
+        QList<QWebSocket*>                      ws_clients;
 };
 
 #endif // ENDPOINTWEBSOCKET_H
