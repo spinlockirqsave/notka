@@ -13,7 +13,8 @@ EndPointWebSocket::EndPointWebSocket(QWebSocketServer::SslMode mode,
         ws_server(new QWebSocketServer(QStringLiteral("Notka WebSocket EndPoint"), mode, this)),
         address(address),
         port(port),
-        ws_clients()
+        ws_clients(),
+        thread_pool(parent)
 {
         connect(ws_server.data(), SIGNAL(newConnection()), this, SLOT(on_new_connection()));
 }
@@ -55,6 +56,7 @@ void EndPointWebSocket::on_new_connection()
         connect(client, &QWebSocket::binaryMessageReceived, this, &EndPointWebSocket::on_bin_msg_rx);
         connect(client, &QWebSocket::disconnected, this, &EndPointWebSocket::on_sock_disconnect);
 
+        QMutexLocker lock(&ws_clients_mutex);
         ws_clients.append(client);
 }
 
@@ -64,9 +66,18 @@ void EndPointWebSocket::on_text_msg_rx(QString msg)
         return;
 }
 
-void EndPointWebSocket::on_bin_msg_rx(QByteArray msg)
+void EndPointWebSocket::on_bin_msg_rx(QByteArray raw_msg)
 {
-        (void) msg;
+        MsgHandler *mh;
+
+        try {
+                mh = new MsgHandler(raw_msg);
+                mh->setAutoDelete(true);
+                thread_pool.start(mh);
+        } catch (...) {
+                // TODO handle error
+        }
+
         return;
 }
 
@@ -75,7 +86,9 @@ void EndPointWebSocket::on_sock_disconnect()
         auto *client = qobject_cast<QWebSocket *>(sender());
 
         if (client) {
+                QMutexLocker lock(&ws_clients_mutex);
                 ws_clients.removeAll(client);
+                lock.unlock();
 
                 /* QWebSocketServer owns the socket pointer.
                  * Tell the server to schedule socket for deletion */

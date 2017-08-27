@@ -26,13 +26,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     src/main.cpp \
     src/notka.cpp \
-    src/endpointwebsocket.cpp
+    src/endpointwebsocket.cpp \
+    src/msghandler.cpp \
+    src/msg.cpp
 
 HEADERS  += \
     inc/notka.h \
     inc/endpointwebsocket.h \
     notkaendpoint.h \
-    inc/notkaendpoint.h
+    inc/notkaendpoint.h \
+    inc/msghandler.h \
+    inc/msg.h
 
 FORMS    += \
     ui/notka.ui

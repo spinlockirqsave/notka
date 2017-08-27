@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<title>WebSocket Client</title>
+	</head>
+	<body>
+		<h1>WebSocket Client</h1>
+		<p>
+		<button onClick="initWebSocket();">Connect</button>
+		<button onClick="stopWebSocket();">Disconnect</button>
+		<button onClick="checkSocket();">State</button>
+		</p>
+		<p>
+		<textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+		</p>
+		<p>
+		<input type="text" id="inputNick" value="nickname" />
+		<input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessageBin2();"/>
+		<button onClick="sendMessageBin2();">Send</button>
+		</p>
+
+		<script type="text/javascript">
+var debugTextArea = document.getElementById("debugTextArea");
+function debug(message) {
+	debugTextArea.value += message + "\n";
+	debugTextArea.scrollTop = debugTextArea.scrollHeight;
+}
+
+function sendMessage() {
+	var nickname = document.getElementById("inputNick").value;
+	var msg = document.getElementById("inputText").value;
+	var strToSend = nickname + ": " + msg;
+	if ( websocket != null )
+	{
+		document.getElementById("inputText").value = "";
+		websocket.send( strToSend, { binary: true } );
+		console.log( "string sent :", '"'+strToSend+'"' );
+		debug(strToSend);
+	}
+}
+
+function sendMessageBin() {
+	const array = new Int8Array(5);
+
+	for (var i = 0; i < array.length; ++i) {
+		array[i] = i;
+	}
+	console.log(array);
+	websocket.send(array);
+}
+
+function str2ab(str) {
+	var buf = new ArrayBuffer(str.length); // but should be 2 bytes for each char for Unicode
+	var bufView = new Uint8Array(buf);
+	for (var i=0, strLen=str.length; i<strLen; i++) {
+		bufView[i] = str.charCodeAt(i);
+	}
+	return buf;
+}
+
+function sendMessageBin2() {
+	var nickname = document.getElementById("inputNick").value;
+	var msg = document.getElementById("inputText").value;
+	var strToSend = nickname + ": " + msg;
+	if ( websocket != null )
+	{
+		document.getElementById("inputText").value = "";
+		//const array = Int8Array.from(strToSend);
+		var array = str2ab(strToSend);
+		websocket.send( array );
+		console.log( "string sent as array :", '"'+strToSend+'"' );
+		debug(strToSend);
+	}
+}
+
+var wsUri = "ws://localhost:1234";
+var websocket = null;
+
+function initWebSocket() {
+	try {
+		if (typeof MozWebSocket == 'function')
+			WebSocket = MozWebSocket;
+		if ( websocket && websocket.readyState == 1 )
+			websocket.close();
+		websocket = new WebSocket( wsUri );
+		websocket.binaryType = 'arraybuffer';
+		websocket.onopen = function (evt) {
+			debug("CONNECTED");
+		};
+		websocket.onclose = function (evt) {
+			debug("DISCONNECTED");
+		};
+		websocket.onmessage = function (evt) {
+			console.log( "Message received :", evt.data );
+			debug( evt.data );
+		};
+		websocket.onerror = function (evt) {
+			debug('ERROR: ' + evt.data);
+		};
+	} catch (exception) {
+		debug('ERROR: ' + exception);
+	}
+}
+
+function stopWebSocket() {
+	if (websocket)
+		websocket.close();
+}
+
+function checkSocket() {
+	if (websocket != null) {
+		var stateStr;
+		switch (websocket.readyState) {
+		case 0: {
+			stateStr = "CONNECTING";
+			break;
+		}
+		case 1: {
+			stateStr = "OPEN";
+			break;
+		}
+		case 2: {
+			stateStr = "CLOSING";
+			break;
+		}
+		case 3: {
+			stateStr = "CLOSED";
+			break;
+		}
+		default: {
+			stateStr = "UNKNOWN";
+			break;
+		}
+		}
+		debug("WebSocket state = " + websocket.readyState + " ( " + stateStr + " )");
+	} else {
+		debug("WebSocket is null");
+	}
+}
+		</script>
+	</body>
+</html>
