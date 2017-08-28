@@ -13,7 +13,7 @@ EndPointWebSocket::EndPointWebSocket(QWebSocketServer::SslMode mode,
         ws_server(new QWebSocketServer(QStringLiteral("Notka WebSocket EndPoint"), mode, this)),
         address(address),
         port(port),
-        ws_clients(),
+        ws_sessions(),
         thread_pool(parent)
 {
         connect(ws_server.data(), SIGNAL(newConnection()), this, SLOT(on_new_connection()));
@@ -33,17 +33,19 @@ int EndPointWebSocket::open()
 
 void EndPointWebSocket::close()
 {
-        ws_clients_disconnect();
+        ws_sessions_disconnect();
 
         if (ws_server)
                 ws_server->close();
 }
 
-void EndPointWebSocket::ws_clients_disconnect()
+void EndPointWebSocket::ws_sessions_disconnect()
 {
-        Q_FOREACH(auto client, ws_clients)
+        Q_FOREACH(auto session, ws_sessions)
         {
-                client->close();
+                // TODO mutex lock and close session
+                //session.second->close();
+                qDebug() << session;
         }
 }
 
@@ -52,33 +54,18 @@ void EndPointWebSocket::on_new_connection()
         /* QWebSocketServer owns the socket pointer. */
         QWebSocket *client = ws_server->nextPendingConnection();
 
-        connect(client, &QWebSocket::textMessageReceived, this, &EndPointWebSocket::on_text_msg_rx);
-        connect(client, &QWebSocket::binaryMessageReceived, this, &EndPointWebSocket::on_bin_msg_rx);
+        WebSocketSession *ws_session = new WebSocketSession(client);
+
+        /**
+         * The &QWebSocket::textMessageReceived
+         * and &QWebSocket::binaryMessageReceived signals
+         * get connected to ws_session's slots. Only &WebSocket::disconnected
+         * signal is handled by this end point because it must remove
+         * the session from the container.
+         */
         connect(client, &QWebSocket::disconnected, this, &EndPointWebSocket::on_sock_disconnect);
 
-        QMutexLocker lock(&ws_clients_mutex);
-        ws_clients.append(client);
-}
-
-void EndPointWebSocket::on_text_msg_rx(QString msg)
-{
-        (void) msg;
-        return;
-}
-
-void EndPointWebSocket::on_bin_msg_rx(QByteArray raw_msg)
-{
-        MsgHandler *mh;
-
-        try {
-                mh = new MsgHandler(raw_msg);
-                mh->setAutoDelete(true);
-                thread_pool.start(mh);
-        } catch (...) {
-                // TODO handle error
-        }
-
-        return;
+        ws_sessions[client] = ws_session;
 }
 
 void EndPointWebSocket::on_sock_disconnect()
@@ -86,12 +73,22 @@ void EndPointWebSocket::on_sock_disconnect()
         auto *client = qobject_cast<QWebSocket *>(sender());
 
         if (client) {
-                QMutexLocker lock(&ws_clients_mutex);
-                ws_clients.removeAll(client);
-                lock.unlock();
+                auto it = ws_sessions.find(client);
 
-                /* QWebSocketServer owns the socket pointer.
-                 * Tell the server to schedule socket for deletion */
-                client->deleteLater();
+                if (it == ws_sessions.end())
+                        return;
+
+                auto ws_session = it.value();
+
+                while(1) {
+                        QMutexLocker lock(&ws_session->mutex);
+                        if (ws_session->qrunnables_scheduled == 0)
+                        {
+                                ws_sessions.remove(client);
+                                lock.unlock();
+                                delete ws_session;
+                                return;
+                        }
+                }
         }
 }

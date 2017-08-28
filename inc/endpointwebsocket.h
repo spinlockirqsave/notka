@@ -8,9 +8,11 @@
 #include <QThread>
 #include <QMutex>
 #include <QThreadPool>
+#include <QMap>
 
 #include "../inc/notkaendpoint.h"
 #include "../inc/msghandler.h"
+#include "../inc/websocketsession.h"
 
 
 /**
@@ -44,16 +46,9 @@ private slots:
         /**
          * @brief Gracefully close connections.
          */
-        void ws_clients_disconnect();
+        void ws_sessions_disconnect();
 
         void on_new_connection();
-        void on_text_msg_rx(QString msg);
-
-        /**
-         * @brief Callback from the Web Socket.
-         * @param msg   Incoming binary message.
-         */
-        void on_bin_msg_rx(QByteArray raw_msg);
 
         void on_sock_disconnect();
 
@@ -68,10 +63,9 @@ private:
         quint16                                 port;
 
         /**
-         * QWebSocketServer owns the pointers to the sockets.
+         * QWebSocketServer stores the pointers to the sessions.
          */
-        QMutex                                  ws_clients_mutex;
-        QList<QWebSocket*>                      ws_clients;
+        QMap<QWebSocket *, WebSocketSession*>   ws_sessions;
 
         /*
          * Connections are handled by worker threads from thread pool.
