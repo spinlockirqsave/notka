@@ -1,4 +1,5 @@
 #include "../inc/websocketsession.h"
+#include "../inc/msghandler.h"
 
 
 QThreadPool WebSocketSession::thread_pool;

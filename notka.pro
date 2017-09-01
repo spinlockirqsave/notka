@@ -34,7 +34,7 @@ SOURCES += \
 HEADERS  += \
     inc/notka.h \
     inc/endpointwebsocket.h \
-    notkaendpoint.h \
+    inc/notkaendpoint.h \
     inc/notkaendpoint.h \
     inc/msghandler.h \
     inc/msg.h \
@@ -42,3 +42,6 @@ HEADERS  += \
 
 FORMS    += \
     ui/notka.ui
+
+DISTFILES += \
+    html/webclient.html

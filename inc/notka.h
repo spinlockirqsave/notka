@@ -11,6 +11,8 @@ namespace Ui {
 class Notka;
 }
 
+#define APP_NAME "Notka"
+
 class Notka : public QMainWindow
 {
         Q_OBJECT
@@ -18,6 +20,9 @@ class Notka : public QMainWindow
 public:
         explicit Notka(QWidget *parent = 0);
         ~Notka();
+
+public slots:
+        void closeEvent(QCloseEvent *e) override;
 
 private:
         Ui::Notka *ui;

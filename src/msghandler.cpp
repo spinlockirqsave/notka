@@ -1,3 +1,5 @@
+#include <QDebug>
+
 #include "../inc/msghandler.h"
 
 
@@ -21,16 +23,21 @@ std::unique_ptr<Msg> MsgHandler::parse_raw_data(QByteArray raw_msg)
         int payload_len;
         ds >> payload_len;
 
-        std::unique_ptr<Msg> m(new MsgHandshakeSyn(payload_len));
-        return m;
+        switch (payload_id)
+        {
+        case Msg::Id::IdMsgHandshakeSyn:
+                return std::unique_ptr<Msg>(new MsgHandshakeSyn(payload_len, ws_session));
+        default:
+                return nullptr;
+        }
 }
 
-#include <QDebug>
 void MsgHandler::run()
 {
         QMutexLocker ml(&ws_session->mutex);
 
-        qDebug() << raw_msg;
+        qDebug() << __func__ << " " << raw_msg;
+
         std::unique_ptr<Msg> msg = parse_raw_data(raw_msg);
         if (msg)
                 msg->process();

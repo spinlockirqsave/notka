@@ -53,6 +53,8 @@ private slots:
         void on_sock_disconnect();
 
 private:
+        QMap<QWebSocket*, WebSocketSession*>::iterator close_ws_session(QMap<QWebSocket*, WebSocketSession*>::iterator it);
+
         /**
          * Scoped pointer asserts the Web Socket server will not outlive
          * the object responsible for it, i.e. the EndPointWebSocket which created it.

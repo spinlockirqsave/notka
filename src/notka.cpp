@@ -1,3 +1,6 @@
+#include <QCloseEvent>
+#include <QMessageBox>
+
 #include "../inc/notka.h"
 #include "ui_notka.h"
 
@@ -58,7 +61,7 @@ void Notka::gui_add_ws_server_to_tbw()
         ui->tw_servers->model()->insertRow(row);
 
         QHostAddress ip(QHostAddress::Any);
-        quint16 port = 1234;
+        quint16 port = 1235;
         ui->tw_servers->setItem(row, 0, new QTableWidgetItem(ip.toString()));
         ui->tw_servers->setItem(row, 1, new QTableWidgetItem(QString::number(port)));
         ui->tw_servers->setItem(row, 2, new QTableWidgetItem("stopped"));
@@ -84,4 +87,17 @@ void Notka::gui_cb_ws_server_stop(bool checked)
 {
         (void) checked;
         ws_server_start_stop(0);
+}
+
+void Notka::closeEvent(QCloseEvent *e)
+{
+    QMessageBox::StandardButton res = QMessageBox::question(this, APP_NAME,
+                                                            tr("Are you sure?\n"),
+                                                            QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                                                            QMessageBox::Yes);
+    if (res != QMessageBox::Yes)
+        e->ignore();
+
+    ws_server_start_stop(0);
+    e->accept();
 }

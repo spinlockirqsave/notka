@@ -41,11 +41,12 @@ void EndPointWebSocket::close()
 
 void EndPointWebSocket::ws_sessions_disconnect()
 {
-        Q_FOREACH(auto session, ws_sessions)
+        QMap<QWebSocket*, WebSocketSession*>::iterator it = ws_sessions.begin();
+        QMap<QWebSocket*, WebSocketSession*>::iterator end = ws_sessions.end();
+
+        while (it != end)
         {
-                // TODO mutex lock and close session
-                //session.second->close();
-                qDebug() << session;
+                it = close_ws_session(it);
         }
 }
 
@@ -61,7 +62,9 @@ void EndPointWebSocket::on_new_connection()
          * and &QWebSocket::binaryMessageReceived signals
          * get connected to ws_session's slots. Only &WebSocket::disconnected
          * signal is handled by this end point because it must remove
-         * the session from the container.
+         * the session from the container and the access to container
+         * is synchronised for this class, as EndPointWebSocket's callbacks
+         * are called synchronously by main thread only.
          */
         connect(client, &QWebSocket::disconnected, this, &EndPointWebSocket::on_sock_disconnect);
 
@@ -78,17 +81,26 @@ void EndPointWebSocket::on_sock_disconnect()
                 if (it == ws_sessions.end())
                         return;
 
-                auto ws_session = it.value();
+                close_ws_session(it);
+        }
+}
 
-                while(1) {
-                        QMutexLocker lock(&ws_session->mutex);
-                        if (ws_session->qrunnables_scheduled == 0)
-                        {
-                                ws_sessions.remove(client);
-                                lock.unlock();
-                                delete ws_session;
-                                return;
-                        }
+QMap<QWebSocket*, WebSocketSession*>::iterator EndPointWebSocket::close_ws_session(QMap<QWebSocket*, WebSocketSession*>::iterator it)
+{
+        auto ws_session = it.value();
+
+        while(1) {
+                QMutexLocker lock(&ws_session->mutex);
+                if (ws_session->qrunnables_scheduled == 0)
+                {
+                        it = ws_sessions.erase(it);
+                        lock.unlock();
+
+                        /* Will deleteLater() web socket in session's destructor. */
+                        delete ws_session;
+                        return it;
                 }
+                lock.unlock();
+                QThread::msleep(50);
         }
 }

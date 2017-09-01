@@ -12,7 +12,8 @@
 #include <QScopedPointer>
 #include <QThreadPool>
 
-#include "../inc/msghandler.h"
+
+class MsgHandler;
 
 
 class WebSocketSession : public QObject

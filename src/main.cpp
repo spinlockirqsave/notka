@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
         Notka main_window;
 
         QCommandLineParser parser;
-        parser.setApplicationDescription("Notka");
+        parser.setApplicationDescription(APP_NAME);
 
         parser.addHelpOption();
 
