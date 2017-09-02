@@ -20,8 +20,8 @@ class WebSocketSession : public QObject
 {
         Q_OBJECT
 public:
-        WebSocketSession(QWebSocket *ws,
-                         EndPointWebSocket *endpoint);
+        WebSocketSession(QWebSocket &ws,
+                         EndPointWebSocket const &endpoint);
 
         /**
          * @brief Close socket and schedule it for defferred deletion.
@@ -57,9 +57,9 @@ public:
  * which requires session's user data to be public, or MsgHandler
  * being session's friend, what's worse...
  */
-        QWebSocket      *ws;
+        QWebSocket &ws;
 
-        EndPointWebSocket *endpoint;
+        EndPointWebSocket const& endpoint;
 
         QString         user;
         bool            logged_in;

@@ -4,7 +4,7 @@
 
 
 MsgHandler::MsgHandler(QByteArray raw_msg,
-                       WebSocketSession *ws_session) :
+                       WebSocketSession &ws_session) :
         raw_msg(raw_msg),
         ws_session(ws_session)
 {
@@ -34,7 +34,7 @@ std::unique_ptr<Msg> MsgHandler::parse_raw_data(QByteArray raw_msg)
 
 void MsgHandler::run()
 {
-        QMutexLocker ml(&ws_session->mutex);
+        QMutexLocker ml(&ws_session.mutex);
 
         qDebug() << __func__ << " " << raw_msg;
 
@@ -46,5 +46,5 @@ void MsgHandler::run()
          * - session can be removed from endpoint if there
          * is no QRunnables scheduled to process that session.
          */
-        ws_session->qrunnables_scheduled--;
+        ws_session.qrunnables_scheduled--;
 }

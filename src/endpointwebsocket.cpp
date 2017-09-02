@@ -55,7 +55,7 @@ void EndPointWebSocket::on_new_connection()
         /* QWebSocketServer owns the socket pointer. */
         QWebSocket *client = ws_server->nextPendingConnection();
 
-        WebSocketSession *ws_session = new WebSocketSession(client, this);
+        WebSocketSession *ws_session = new WebSocketSession(*client, *this);
 
         /**
          * The &QWebSocket::textMessageReceived

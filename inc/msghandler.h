@@ -16,7 +16,7 @@
 class MsgHandler : public QRunnable
 {
 public:
-        MsgHandler(QByteArray raw_msg, WebSocketSession *ws_session);
+        MsgHandler(QByteArray raw_msg, WebSocketSession &ws_session);
 
         /**
          * @brief Implements factory pattern to produce messages derived from Msg struct.
@@ -28,7 +28,7 @@ public:
         inline void run() override;
 private:
         QByteArray              raw_msg;
-        WebSocketSession        *ws_session;
+        WebSocketSession        &ws_session;
 };
 
 #endif // MSGHANDLER_H
