@@ -20,16 +20,13 @@ struct Msg
          */
         virtual void post()
         {
-                QWebSocket *ws = ws_session->ws;
-
                 QByteArray raw_msg;
                 QDataStream ds(&raw_msg, QIODevice::WriteOnly);
 
                 ds << payload_id;
                 ds << payload_len;
 
-                ws->sendBinaryMessage(raw_msg);
-                ws->flush();
+                ws_session->bin_msg_tx(raw_msg);
         }
 
         Msg(Id payload_id, int payload_len, WebSocketSession *ws_session) :

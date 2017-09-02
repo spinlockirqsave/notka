@@ -42,7 +42,7 @@ void EndPointWebSocket::close()
 void EndPointWebSocket::ws_sessions_disconnect()
 {
         QMap<QWebSocket*, WebSocketSession*>::iterator it = ws_sessions.begin();
-        QMap<QWebSocket*, WebSocketSession*>::iterator end = ws_sessions.end();
+        auto end = ws_sessions.end();
 
         while (it != end)
         {
@@ -55,7 +55,7 @@ void EndPointWebSocket::on_new_connection()
         /* QWebSocketServer owns the socket pointer. */
         QWebSocket *client = ws_server->nextPendingConnection();
 
-        WebSocketSession *ws_session = new WebSocketSession(client);
+        WebSocketSession *ws_session = new WebSocketSession(client, this);
 
         /**
          * The &QWebSocket::textMessageReceived
@@ -83,6 +83,12 @@ void EndPointWebSocket::on_sock_disconnect()
 
                 close_ws_session(it);
         }
+}
+
+void EndPointWebSocket::bin_msg_tx(QWebSocket *ws, QByteArray raw_msg)
+{
+                ws->sendBinaryMessage(raw_msg);
+                ws->flush();
 }
 
 QMap<QWebSocket*, WebSocketSession*>::iterator EndPointWebSocket::close_ws_session(QMap<QWebSocket*, WebSocketSession*>::iterator it)

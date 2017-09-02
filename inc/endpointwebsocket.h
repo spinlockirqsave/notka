@@ -52,6 +52,9 @@ private slots:
 
         void on_sock_disconnect();
 
+public slots:
+        void bin_msg_tx(QWebSocket *ws, QByteArray raw_msg);
+
 private:
         QMap<QWebSocket*, WebSocketSession*>::iterator close_ws_session(QMap<QWebSocket*, WebSocketSession*>::iterator it);
 

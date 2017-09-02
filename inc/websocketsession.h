@@ -12,7 +12,7 @@
 #include <QScopedPointer>
 #include <QThreadPool>
 
-
+class EndPointWebSocket;
 class MsgHandler;
 
 
@@ -20,18 +20,8 @@ class WebSocketSession : public QObject
 {
         Q_OBJECT
 public:
-        WebSocketSession(QWebSocket *ws) :
-                mutex(),
-                qrunnables_scheduled(0),
-                ws(ws),
-                user(),
-                logged_in(false)
-        {
-                connect(ws, &QWebSocket::textMessageReceived,
-                        this, &WebSocketSession::on_text_msg_rx);
-                connect(ws, &QWebSocket::binaryMessageReceived,
-                        this, &WebSocketSession::on_bin_msg_rx);
-        }
+        WebSocketSession(QWebSocket *ws,
+                         EndPointWebSocket *endpoint);
 
         /**
          * @brief Close socket and schedule it for defferred deletion.
@@ -41,9 +31,17 @@ public:
         WebSocketSession(WebSocketSession const &) = delete;
         WebSocketSession& operator=(WebSocketSession const &) = delete;
 
+        /**
+         * @brief Forwards the call to signal bin_msg_tx.
+         */
+        void bin_msg_tx(QByteArray raw_msg);
+
 public slots:
         void on_text_msg_rx(QString msg);
         void on_bin_msg_rx(QByteArray raw_msg);
+
+signals:
+        void signal_bin_msg_tx(QWebSocket *ws, QByteArray raw_msg);
 
 public:
         /**
@@ -60,6 +58,9 @@ public:
  * being session's friend, what's worse...
  */
         QWebSocket      *ws;
+
+        EndPointWebSocket *endpoint;
+
         QString         user;
         bool            logged_in;
 

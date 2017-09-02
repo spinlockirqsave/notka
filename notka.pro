@@ -35,7 +35,6 @@ HEADERS  += \
     inc/notka.h \
     inc/endpointwebsocket.h \
     inc/notkaendpoint.h \
-    inc/notkaendpoint.h \
     inc/msghandler.h \
     inc/msg.h \
     inc/websocketsession.h
