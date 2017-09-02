@@ -95,8 +95,10 @@ void Notka::closeEvent(QCloseEvent *e)
                                                             tr("Are you sure?\n"),
                                                             QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
                                                             QMessageBox::Yes);
-    if (res != QMessageBox::Yes)
+    if (res != QMessageBox::Yes) {
         e->ignore();
+        return;
+    }
 
     ws_server_start_stop(0);
     e->accept();
