@@ -20,7 +20,7 @@ struct Msg
          */
         virtual void post();
 
-        Msg(Id payload_id, int payload_len, WebSocketSession &ws_session) :
+        explicit Msg(Id payload_id, int payload_len, WebSocketSession &ws_session) :
                 payload_id(payload_id),
                 payload_len(payload_len),
                 ws_session(ws_session)
@@ -34,7 +34,7 @@ struct Msg
 
 class MsgHandshakeSyn : public Msg {
 public:
-        MsgHandshakeSyn(int payload_len, WebSocketSession &ws_session) :
+        explicit MsgHandshakeSyn(int payload_len, WebSocketSession &ws_session) :
                 Msg(Id::IdMsgHandshakeSyn, payload_len, ws_session)
         {}
         ~MsgHandshakeSyn() {}
@@ -45,7 +45,7 @@ public:
 
 class MsgHandshakeAck : public Msg {
 public:
-        MsgHandshakeAck(int payload_len, WebSocketSession &ws_session) :
+        explicit MsgHandshakeAck(int payload_len, WebSocketSession &ws_session) :
                 Msg(Id::IdMsgHandshakeAck, payload_len, ws_session)
         {}
         ~MsgHandshakeAck() {}

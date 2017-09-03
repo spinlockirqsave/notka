@@ -20,7 +20,7 @@ class WebSocketSession : public QObject
 {
         Q_OBJECT
 public:
-        WebSocketSession(QWebSocket &ws,
+        explicit WebSocketSession(QWebSocket &ws,
                          EndPointWebSocket const &endpoint);
 
         /**
