@@ -23,7 +23,7 @@ public:
          * @param raw_msg
          * @return Unique pointer to base struct Msg.
          */
-        std::unique_ptr<Msg> parse_raw_data(QByteArray raw_msg);
+        std::unique_ptr<MsgRX> parse_raw_msg(QByteArray raw_msg);
 
         inline void run() override;
 private:

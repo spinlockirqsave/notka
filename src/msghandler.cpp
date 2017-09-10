@@ -10,13 +10,16 @@ MsgHandler::MsgHandler(QByteArray raw_msg,
 {
 }
 
-std::unique_ptr<Msg> MsgHandler::parse_raw_data(QByteArray raw_msg)
+std::unique_ptr<MsgRX> MsgHandler::parse_raw_msg(QByteArray raw_msg)
 {
         int msg_len = raw_msg.length();
         if (msg_len < 8)
                 return nullptr;
 
         QDataStream ds(&raw_msg, QIODevice::ReadOnly);
+
+        ds.setByteOrder(QDataStream::BigEndian);
+
         int payload_id;
         ds >> payload_id;
 
@@ -25,8 +28,12 @@ std::unique_ptr<Msg> MsgHandler::parse_raw_data(QByteArray raw_msg)
 
         switch (payload_id)
         {
-        case Msg::Id::IdMsgHandshakeSyn:
-                return std::unique_ptr<Msg>(new MsgHandshakeSyn(payload_len, ws_session));
+        case MsgRX::Id::IdMsgHandshakeSyn:
+                return std::unique_ptr<MsgRX>(new MsgHandshakeSyn(payload_len, ws_session));
+
+        case MsgRX::IdMsgSaveReq:
+                return std::unique_ptr<MsgRX>(new MsgSaveReq(payload_len, ws_session));
+
         default:
                 return nullptr;
         }
@@ -38,9 +45,15 @@ void MsgHandler::run()
 
         qDebug() << __func__ << " " << raw_msg;
 
-        std::unique_ptr<Msg> msg = parse_raw_data(raw_msg);
-        if (msg)
-                msg->process();
+        std::unique_ptr<MsgRX> msg = parse_raw_msg(raw_msg);
+        if (msg) {
+                /* Process the message. */
+                QDataStream ds(&raw_msg, QIODevice::ReadOnly);
+
+                ds.setByteOrder(QDataStream::BigEndian);
+
+                ds >> msg;
+        }
         /**
          * Processing finished, so tell end point logic
          * - session can be removed from endpoint if there

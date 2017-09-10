@@ -11,24 +11,26 @@
 		</p>
 		<p>
 		<textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
+                <textarea id="NotkaText" style="width:800px;height:200px;"></textarea>
 		</p>
 		<p>
-		<input type="text" id="inputNick" value="nickname" />
+                <input type="text" id="inputLogin" value="login" />
 		<input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessageBin2();"/>
-		<button onClick="sendMessageBin2();">Send</button>
+                <button onClick="tx_msg_save_req();">Save</button>
 		</p>
 
 		<script type="text/javascript">
 var debugTextArea = document.getElementById("debugTextArea");
+
 function debug(message) {
 	debugTextArea.value += message + "\n";
 	debugTextArea.scrollTop = debugTextArea.scrollHeight;
 }
 
 function sendMessage() {
-	var nickname = document.getElementById("inputNick").value;
-	var msg = document.getElementById("inputText").value;
-	var strToSend = nickname + ": " + msg;
+        var login = document.getElementById("inputLogin").value;
+        var msg = document.getElementById("inputText").value;
+        var strToSend = login + ": " + msg;
 	if ( websocket != null )
 	{
 		document.getElementById("inputText").value = "";
@@ -58,10 +60,10 @@ function str2ab(str) {
 }
 
 function sendMessageBin2() {
-	var nickname = document.getElementById("inputNick").value;
-	var msg = document.getElementById("inputText").value;
+        var nickname = document.getElementById("inputLogin").value;
+        var msg = document.getElementById("inputText").value;
 	var strToSend = nickname + ": " + msg;
-	if ( websocket != null )
+        if (websocket != null)
 	{
 		document.getElementById("inputText").value = "";
 		//const array = Int8Array.from(strToSend);
@@ -158,6 +160,43 @@ function tx_MsgSYN() {
         }
 }
 
+function tx_msg_save_req() {
+        var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
+        var bufView32 = new Uint32Array(msg);     // by default js uses big endian
+        bufView32[0] = 2;                         // MsgRX::MsgSaveReq (rx from server point of view)
+        bufView32[1] = 0;                         // payload length, 0 so far
+        if (endiannes === 0) {                    // but if this machine is le
+                console.log("swapping");
+                bufView32[0] = swap32(bufView32[0]);
+                bufView32[1] = swap32(bufView32[1]);
+        }
+
+        var login = document.getElementById("inputLogin").value;
+        var login_bin = new ArrayBuffer(32);
+        var bufView8 = new Uint8Array(login_bin);
+        for (var i=0, strLen=login.length; i<strLen && i<32; i++) {
+                bufView8[i] = login.charCodeAt(i);
+        }
+
+        var notka = document.getElementById("NotkaText").value;
+        var notka_bin = str2ab(notka);
+
+        bufView32[1] = 32 + notka.length;               // payload length = 4 byte login + notka len
+        if (endiannes === 0) {                          // but if this machine is le
+                console.log("swapping");
+                bufView32[1] = swap32(bufView32[1]);
+        }
+
+        msg = _appendBuffer(msg, login_bin);
+        msg = _appendBuffer(msg, notka_bin);
+
+        if (websocket != null)
+        {
+                websocket.send(msg);
+                console.log("tx_msg_save_req: " + msg);
+        }
+}
+
 function swap32(val) {
     return ((val & 0xFF) << 24)
            | ((val & 0xFF00) << 8)
@@ -186,6 +225,21 @@ function check_endianness() {
         throw new Error("Weird ediannes!");
     }
 }
+
+/**
+ * Creates a new Uint8Array based on two different ArrayBuffers
+ *
+ * @private
+ * @param {ArrayBuffers} buffer1 The first buffer.
+ * @param {ArrayBuffers} buffer2 The second buffer.
+ * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
+ */
+var _appendBuffer = function(buffer1, buffer2) {
+  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+  tmp.set(new Uint8Array(buffer1), 0);
+  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+  return tmp.buffer;
+};
 		</script>
 	</body>
 </html>
