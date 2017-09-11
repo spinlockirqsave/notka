@@ -181,7 +181,7 @@ function tx_msg_save_req() {
         var notka = document.getElementById("NotkaText").value;
         var notka_bin = str2ab(notka);
 
-        bufView32[1] = 32 + notka.length;               // payload length = 4 byte login + notka len
+        bufView32[1] = 32 + notka.length;               // payload length = 32 byte login + notka len
         if (endiannes === 0) {                          // but if this machine is le
                 console.log("swapping");
                 bufView32[1] = swap32(bufView32[1]);

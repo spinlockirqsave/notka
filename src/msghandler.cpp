@@ -45,7 +45,7 @@ void MsgHandler::run()
 
         qDebug() << __func__ << " " << raw_msg;
 
-        std::unique_ptr<MsgRX> msg = parse_raw_msg(raw_msg);
+                std::unique_ptr<MsgRX> msg = parse_raw_msg(raw_msg);
         if (msg) {
                 /* Process the message. */
                 QDataStream ds(&raw_msg, QIODevice::ReadOnly);

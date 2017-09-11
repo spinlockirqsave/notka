@@ -24,10 +24,17 @@ Notka::Notka(QWidget *parent) :
 
         /* Button Stop (server). */
         connect(ui->pb_server_stop, SIGNAL(clicked(bool)), this, SLOT(gui_cb_ws_server_stop(bool)));
+
+        if (!Db::init_database()) {
+                QSqlDatabase &db = Db::instance();
+                qDebug() << db.lastError().text();
+                throw std::runtime_error("Database cannot be opened");
+        }
 }
 
 Notka::~Notka()
 {
+        Db::close_database();
         delete ui;
 }
 

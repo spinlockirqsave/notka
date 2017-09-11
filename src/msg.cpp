@@ -36,6 +36,36 @@ void MsgHandshakeAck::post()
 
 void MsgSaveReq::process(QDataStream &ds)
 {
-        QString login;
-        ds >> login;
+        int id;
+        ds >> id;
+
+        int payload_len;
+        ds >> payload_len;
+
+        int text_len = payload_len - 32;
+
+        if (text_len < 0) {
+                /* Nothing to save, error.
+                 * TODO: Send error description. */
+                return;
+        }
+
+        char login_buf[32];
+        ds.readRawData(login_buf, sizeof(login_buf));
+        QString login(login_buf);
+
+        if (Db::authenticate_user(login, "password")) {
+                char* bytes = new char[text_len];
+                ds.readRawData(bytes, text_len);
+                QByteArray notka = QByteArray::fromRawData(bytes, text_len);
+
+                bool ok = Db::save_notka(login, notka);
+
+                if (!ok) {
+                        /* TODO: send error description. */
+                        return;
+                }
+                /* TODO: tx error OK. */
+        }
+        /* TODO: tx error description. */
 }

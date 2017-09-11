@@ -2,6 +2,8 @@
 #define MSG_H
 
 #include "../inc/websocketsession.h"
+#include "../inc/globals.h"
+
 #include <QWebSocket>
 
 #include <memory>

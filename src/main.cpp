@@ -2,7 +2,12 @@
 #include <QApplication>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QCommandLineOption>
+#include "../inc/globals.h"
 
+
+namespace Database {
+        QMutex mutex;
+}
 
 int main(int argc, char *argv[])
 {

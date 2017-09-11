@@ -3,6 +3,7 @@
 
 
 #include <QMainWindow>
+#include "../inc/globals.h"
 
 #include "../inc/endpointwebsocket.h"
 
@@ -19,6 +20,8 @@ class Notka : public QMainWindow
 
 public:
         explicit Notka(QWidget *parent = 0);
+        Notka(Notka const &) = delete;
+        Notka& operator=(const Notka &) = delete;
         ~Notka();
 
 public slots:

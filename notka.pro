@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui websockets
+QT       += core gui websockets sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,6 +22,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+QTPLUGIN += QSQLITE
 
 SOURCES += \
     src/main.cpp \
@@ -29,7 +30,8 @@ SOURCES += \
     src/endpointwebsocket.cpp \
     src/msghandler.cpp \
     src/msg.cpp \
-    src/websocketsession.cpp
+    src/websocketsession.cpp \
+    src/globals.cpp
 
 HEADERS  += \
     inc/notka.h \
@@ -37,7 +39,8 @@ HEADERS  += \
     inc/notkaendpoint.h \
     inc/msghandler.h \
     inc/msg.h \
-    inc/websocketsession.h
+    inc/websocketsession.h \
+    inc/globals.h
 
 FORMS    += \
     ui/notka.ui
