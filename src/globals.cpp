@@ -29,7 +29,7 @@ void Db::close_database()
         db.close();
 }
 
-int Db::authenticate_user(QString login, QString password)
+bool Db::authenticate_user(QString login, QString password)
 {
         QSqlDatabase &db = Db::instance();
 
@@ -41,8 +41,10 @@ int Db::authenticate_user(QString login, QString password)
         QSqlQuery query(db);
         query.exec("SELECT password FROM users WHERE user = '" + login + "'");
 
-        if (query.lastError().isValid())
-                qDebug() << query.lastError().text();
+        if (query.lastError().isValid()) {
+                throw std::runtime_error("Database query error"
+                                         + query.lastError().text().toStdString());
+        }
 
         while (query.next())
         {
@@ -62,12 +64,13 @@ bool Db::save_notka(QString user, QByteArray notka)
 
         db.transaction();
 
-        QSqlQuery query;
-        query.prepare( "INSERT INTO notkas (user, notka) VALUES (:user, :notka) ON DUPLICATE KEY UPDATE notka = VALUES(notka)" );
-        //query.prepare("UPDATE notkas SET notka = :notka WHERE user = :user");
+        QSqlQuery query(db);
+        query.prepare( "INSERT INTO notkas (user, notka) VALUES (:user, :notka) "
+                       "ON DUPLICATE KEY UPDATE notka = VALUES(notka)" );
         query.bindValue(0, user);
         query.bindValue(1, notka);
         query.exec();
+
         if (query.lastError().isValid()) {
                 qDebug() << query.lastError().text();
                 QSqlDatabase::database().rollback();
@@ -75,5 +78,6 @@ bool Db::save_notka(QString user, QByteArray notka)
         }
 
         db.commit();
+
         return true;
 }
