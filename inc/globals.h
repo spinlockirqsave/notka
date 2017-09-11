@@ -15,7 +15,7 @@ namespace Database {
         QSqlDatabase& instance();
         bool init_database();
         void close_database();
-        bool authenticate_user(QString login, QString password);
+        int authenticate_user(QString login, QString password);
         bool save_notka(QString user, QByteArray notka);
 }
 

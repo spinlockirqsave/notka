@@ -16,6 +16,12 @@ class EndPointWebSocket;
 class MsgHandler;
 
 
+enum WebSocketSessionState {
+        LOGGED_IN = 0,
+        NO_SUCH_USER = 1,
+        WRONG_PASSWORD = 2
+};
+
 class WebSocketSession : public QObject
 {
         Q_OBJECT
@@ -61,8 +67,8 @@ public:
 
         EndPointWebSocket const& endpoint;
 
-        QString         user;
-        bool            logged_in;
+        QString                 user;
+        WebSocketSessionState   state;
 
 private:
 

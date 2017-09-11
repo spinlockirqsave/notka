@@ -80,6 +80,12 @@ var wsUri = "ws://localhost:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
+var MsgTXId = {
+        IdMsgUnknown            : -1,
+        IdMsgHandshakeAck       : 1,
+        IdMsgLoginAck           : 2
+}
+
 function initWebSocket() {
 	try {
 		if (typeof MozWebSocket == 'function')
@@ -99,7 +105,7 @@ function initWebSocket() {
 		websocket.onmessage = function (evt) {
 			console.log( "Message received :", evt.data );
 			debug( evt.data );
-                        var raw_msg = new Uint32Array(evt.data);
+                        var raw_msg = new Uint32Array(evt.data, 0, 2);
                         if (endiannes === 0) {          // but if this machine is le
                                 console.log("swapping");
                                 raw_msg[0] = swap32(raw_msg[0]);
@@ -109,6 +115,17 @@ function initWebSocket() {
                         var payload_len = raw_msg[1];
                         debug("Payload id: " + payload_id);
                         debug("Payload len: " + payload_len);
+
+                        switch (payload_id)
+                        {
+                                case MsgTXId.IdMsgLoginAck: {
+                                        rx_msg_login_ack(evt.data);
+                                        break;
+                                }
+                                default: {
+                                        break;
+                                }
+                        }
 		};
 		websocket.onerror = function (evt) {
 			debug('ERROR: ' + evt.data);
@@ -234,9 +251,6 @@ function tx_msg_login() {
                 bufView8[i] = pass.charCodeAt(i);
         }
 
-        var notka = document.getElementById("NotkaText").value;
-        var notka_bin = str2ab(notka);
-
         msg = _appendBuffer(msg, login_bin);
         msg = _appendBuffer(msg, pass_bin);
 
@@ -247,7 +261,16 @@ function tx_msg_login() {
         }
 }
 
-function rx_msg_login_ack() {
+function rx_msg_login_ack(data) {
+        var raw_msg = new Uint8Array(data);
+        var error_code = raw_msg[8];
+        if (error_code === 0) {
+                // login failed
+                debug("Login failed");
+        } else {
+                // successful
+                debug("Login successful");
+        }
 }
 
 function swap32(val) {

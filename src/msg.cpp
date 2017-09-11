@@ -49,7 +49,7 @@ void MsgSaveReq::process(QDataStream &ds)
         ds.readRawData(login_buf, sizeof(login_buf));
         QString login(login_buf);
 
-        if (Db::authenticate_user(login, "password")) {
+        if (Db::authenticate_user(login, "password") == 0) {
                 char* bytes = new char[text_len];
                 ds.readRawData(bytes, text_len);
                 QByteArray notka = QByteArray::fromRawData(bytes, text_len);
@@ -82,26 +82,38 @@ void MsgLogin::process(QDataStream &ds)
         ds.readRawData(pass_buf, sizeof(pass_buf));
         QString password(pass_buf);
 
-        if (Db::authenticate_user(login, password)) {
-                /* TODO: tx error OK. */
-                ws_session.logged_in = true;
+        ws_session.user = login;
+
+        int res = Db::authenticate_user(login, password);
+        if (res == 0) {
+                ws_session.state = LOGGED_IN;
+        } else if (res == 1) {
+                /* No such user. */
+                ws_session.state = NO_SUCH_USER;
+        } else {
+                /* Wrong Password. */
+                ws_session.state = WRONG_PASSWORD;
         }
-        /* TODO: tx error description. */
+
         MsgLoginAck ack(ws_session);
         ack.post();
 }
 
 void MsgLoginAck::post()
 {
-        /* Send the header */
-        MsgTX::post();
-        /* And error code as body for ACK. */
-        uint8_t error_code = ws_session.logged_in ? 1 : 0;
-
+        /* Append the header */
         QByteArray raw_msg;
         QDataStream ds(&raw_msg, QIODevice::WriteOnly);
 
+        ds << payload_id;
+        ds << payload_len;
+
+        /* And the error code as body for ACK. */
+        uint8_t error_code = ws_session.state;
+
         ds << error_code;
+
+        /* TX */
         ws_session.bin_msg_tx(raw_msg);
 
         return;

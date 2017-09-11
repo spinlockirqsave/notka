@@ -12,7 +12,7 @@ WebSocketSession::WebSocketSession(QWebSocket &ws,
         ws(ws),
         endpoint(endpoint),
         user(),
-        logged_in(false)
+        state(NO_SUCH_USER)
 {
         connect(&ws, &QWebSocket::textMessageReceived,
                 this, &WebSocketSession::on_text_msg_rx);

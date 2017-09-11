@@ -29,7 +29,7 @@ void Db::close_database()
         db.close();
 }
 
-bool Db::authenticate_user(QString login, QString password)
+int Db::authenticate_user(QString login, QString password)
 {
         QSqlDatabase &db = Db::instance();
 
@@ -46,14 +46,20 @@ bool Db::authenticate_user(QString login, QString password)
                                          + query.lastError().text().toStdString());
         }
 
+        if (!query.size()) {
+                /* No such user. */
+                return 1;
+        }
+
         while (query.next())
         {
                 QString pass = query.value(0).toString();
                 if (pass == password)
-                        return true;
+                        return 0;
         }
 
-        return false;
+        /* Wrong password. */
+        return 2;
 }
 
 bool Db::save_notka(QString user, QByteArray notka)

@@ -1,3 +1,6 @@
+var React = require('react');
+var ReactDOM = require('react-dom');
+
 
 var wsUri = "ws://localhost:1235";
 var websocket = null;
@@ -27,6 +30,21 @@ function check_endianness() {
     }
 }
 
+/**
+ * Creates a new Uint8Array based on two different ArrayBuffers
+ *
+ * @private
+ * @param {ArrayBuffers} buffer1 The first buffer.
+ * @param {ArrayBuffers} buffer2 The second buffer.
+ * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
+ */
+var _appendBuffer = function(buffer1, buffer2) {
+  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+  tmp.set(new Uint8Array(buffer1), 0);
+  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+  return tmp.buffer;
+};
+
 function tx_MsgSYN() {
         var msg = new ArrayBuffer(8);
         var bufView = new Uint32Array(msg);     // by default js uses big endian
@@ -45,8 +63,53 @@ function tx_MsgSYN() {
         }
 }
 
+function rx_msg_login_ack(data) {
+    var raw_msg = new Uint8Array(data);
+    var error_code = raw_msg[8];
+    if (error_code === 0) {
+            // login successful
+            const element = <LoginOK />;
+            ReactDOM.render(element, document.getElementById('root'));
+    } else if (error_code === 1) {
+            // no such user
+            const element = <LoginFailedNoUser />;
+            ReactDOM.render(element, document.getElementById('root'));
+    } else {
+            const element = <LoginFailedWrongPass />
+            ReactDOM.render(element, document.getElementById('root'));
+    }
+}
+
 function debug(message) {
     console.log(message);
+}
+
+var MsgTXId = {
+        IdMsgUnknown            : -1,
+        IdMsgHandshakeAck       : 1,
+        IdMsgLoginAck           : 2
+}
+
+function LoginOK() {
+    return <h1>OK</h1>;
+}
+
+function LoginFailedNoUser() {
+    return (
+                <div>
+                <h1>Login failed</h1>
+                <h2>Register?</h2>
+                </div>
+    );
+}
+
+function LoginFailedWrongPass() {
+    return (
+                <div>
+                <h1>Login failed</h1>
+                <h2>Wrong password...</h2>
+                </div>
+    );
 }
 
 module.exports = {
@@ -70,6 +133,27 @@ module.exports = {
 
             websocket.onmessage = function (evt) {
                 debug( evt.data );
+                var raw_msg = new Uint32Array(evt.data, 0, 2);
+                if (endiannes === 0) {          // but if this machine is le
+                        console.log("swapping");
+                        raw_msg[0] = swap32(raw_msg[0]);
+                        raw_msg[1] = swap32(raw_msg[1]);
+                }
+                var payload_id = raw_msg[0];
+                var payload_len = raw_msg[1];
+                debug("Payload id: " + payload_id);
+                debug("Payload len: " + payload_len);
+
+                switch (payload_id)
+                {
+                        case MsgTXId.IdMsgLoginAck: {
+                                rx_msg_login_ack(evt.data);
+                                break;
+                        }
+                        default: {
+                                break;
+                        }
+                }
             };
 
             websocket.onerror = function (evt) {
@@ -78,5 +162,37 @@ module.exports = {
         } catch (exception) {
             debug('ERROR: ' + exception);
         }
+    },
+    tx_msg_login: function(login, pass) {
+            var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
+            var bufView32 = new Uint32Array(msg);     // by default js uses big endian
+            bufView32[0] = 2;                         // MsgRX::MsgLogin (rx from server point of view)
+            bufView32[1] = 64;                        // payload length, login 32 bytes + pass 32 bytes
+            if (endiannes === 0) {                    // but if this machine is le
+                    console.log("swapping");
+                    bufView32[0] = swap32(bufView32[0]);
+                    bufView32[1] = swap32(bufView32[1]);
+            }
+
+            var login_bin = new ArrayBuffer(32);
+            var bufView8 = new Uint8Array(login_bin);
+            for (var i=0, strLen=login.length; i<strLen && i<32; i++) {
+                    bufView8[i] = login.charCodeAt(i);
+            }
+
+            var pass_bin = new ArrayBuffer(32);
+            bufView8 = new Uint8Array(pass_bin);
+            for (i=0, strLen=pass.length; i<strLen && i<32; i++) {
+                    bufView8[i] = pass.charCodeAt(i);
+            }
+
+            msg = _appendBuffer(msg, login_bin);
+            msg = _appendBuffer(msg, pass_bin);
+
+            if (websocket != null)
+            {
+                    websocket.send(msg);
+                    console.log("tx_msg_login: " + msg);
+            }
     }
 };
