@@ -15,8 +15,10 @@
 		</p>
 		<p>
                 <input type="text" id="inputLogin" value="login" />
-		<input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessageBin2();"/>
+                <input type="text" id="inputPassword" value="password" />
+                <button onClick="tx_msg_login();">Login</button>
                 <button onClick="tx_msg_save_req();">Save</button>
+                <input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessageBin2();"/>
 		</p>
 
 		<script type="text/javascript">
@@ -97,6 +99,16 @@ function initWebSocket() {
 		websocket.onmessage = function (evt) {
 			console.log( "Message received :", evt.data );
 			debug( evt.data );
+                        var raw_msg = new Uint32Array(evt.data);
+                        if (endiannes === 0) {          // but if this machine is le
+                                console.log("swapping");
+                                raw_msg[0] = swap32(raw_msg[0]);
+                                raw_msg[1] = swap32(raw_msg[1]);
+                        }
+                        var payload_id = raw_msg[0];
+                        var payload_len = raw_msg[1];
+                        debug("Payload id: " + payload_id);
+                        debug("Payload len: " + payload_len);
 		};
 		websocket.onerror = function (evt) {
 			debug('ERROR: ' + evt.data);
@@ -163,7 +175,7 @@ function tx_MsgSYN() {
 function tx_msg_save_req() {
         var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
         var bufView32 = new Uint32Array(msg);     // by default js uses big endian
-        bufView32[0] = 2;                         // MsgRX::MsgSaveReq (rx from server point of view)
+        bufView32[0] = 3;                         // MsgRX::MsgSaveReq (rx from server point of view)
         bufView32[1] = 0;                         // payload length, 0 so far
         if (endiannes === 0) {                    // but if this machine is le
                 console.log("swapping");
@@ -195,6 +207,47 @@ function tx_msg_save_req() {
                 websocket.send(msg);
                 console.log("tx_msg_save_req: " + msg);
         }
+}
+
+function tx_msg_login() {
+        var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
+        var bufView32 = new Uint32Array(msg);     // by default js uses big endian
+        bufView32[0] = 2;                         // MsgRX::MsgLogin (rx from server point of view)
+        bufView32[1] = 64;                        // payload length, login 32 bytes + pass 32 bytes
+        if (endiannes === 0) {                    // but if this machine is le
+                console.log("swapping");
+                bufView32[0] = swap32(bufView32[0]);
+                bufView32[1] = swap32(bufView32[1]);
+        }
+
+        var login = document.getElementById("inputLogin").value;
+        var login_bin = new ArrayBuffer(32);
+        var bufView8 = new Uint8Array(login_bin);
+        for (var i=0, strLen=login.length; i<strLen && i<32; i++) {
+                bufView8[i] = login.charCodeAt(i);
+        }
+
+        var pass = document.getElementById("inputPassword").value;
+        var pass_bin = new ArrayBuffer(32);
+        bufView8 = new Uint8Array(pass_bin);
+        for (var i=0, strLen=pass.length; i<strLen && i<32; i++) {
+                bufView8[i] = pass.charCodeAt(i);
+        }
+
+        var notka = document.getElementById("NotkaText").value;
+        var notka_bin = str2ab(notka);
+
+        msg = _appendBuffer(msg, login_bin);
+        msg = _appendBuffer(msg, pass_bin);
+
+        if (websocket != null)
+        {
+                websocket.send(msg);
+                console.log("tx_msg_login: " + msg);
+        }
+}
+
+function rx_msg_login_ack() {
 }
 
 function swap32(val) {

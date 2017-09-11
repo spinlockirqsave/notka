@@ -6,8 +6,10 @@
 MsgHandler::MsgHandler(QByteArray raw_msg,
                        WebSocketSession &ws_session) :
         raw_msg(raw_msg),
-        ws_session(ws_session)
+        ws_session(ws_session),
+        ds(new QDataStream(&this->raw_msg, QIODevice::ReadOnly))
 {
+        ds->setByteOrder(QDataStream::BigEndian);
 }
 
 std::unique_ptr<MsgRX> MsgHandler::demux_raw_msg(QByteArray raw_msg)
@@ -16,20 +18,19 @@ std::unique_ptr<MsgRX> MsgHandler::demux_raw_msg(QByteArray raw_msg)
         if (msg_len < 8)
                 return nullptr;
 
-        QDataStream ds(&raw_msg, QIODevice::ReadOnly);
-
-        ds.setByteOrder(QDataStream::BigEndian);
-
         int payload_id;
-        ds >> payload_id;
+        *ds >> payload_id;
 
         int payload_len;
-        ds >> payload_len;
+        *ds >> payload_len;
 
         switch (payload_id)
         {
         case MsgRX::Id::IdMsgHandshakeSyn:
                 return std::unique_ptr<MsgRX>(new MsgHandshakeSyn(payload_len, ws_session));
+
+        case MsgRX::IdMsgLogin:
+                return std::unique_ptr<MsgRX>(new MsgLogin(payload_len, ws_session));
 
         case MsgRX::IdMsgSaveReq:
                 return std::unique_ptr<MsgRX>(new MsgSaveReq(payload_len, ws_session));
@@ -51,12 +52,8 @@ void MsgHandler::run()
                 /* TODO Tx error description. */
         } else {
                 /* Process the message. */
-                QDataStream ds(&raw_msg, QIODevice::ReadOnly);
-
-                ds.setByteOrder(QDataStream::BigEndian);
-
                 try {
-                        ds >> msg;
+                        *ds >> msg;
                 } catch (std::exception &e) {
                         qDebug() << "Processing msg failed: " << e.what();
                 }

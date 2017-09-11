@@ -22,7 +22,8 @@ struct MsgRX
         enum Id {
                 IdMsgUnknown = -1,
                 IdMsgHandshakeSyn = 1,
-                IdMsgSaveReq = 2
+                IdMsgLogin = 2,
+                IdMsgSaveReq = 3
         };
 
         virtual void process(QDataStream &ds) = 0;
@@ -45,7 +46,8 @@ struct MsgTX
 {
         enum Id {
                 IdMsgUnknown = -1,
-                IdMsgHandshakeAck = 1
+                IdMsgHandshakeAck = 1,
+                IdMsgLoginAck = 2
         };
 
         /**
@@ -92,6 +94,26 @@ public:
         MsgSaveReq(const MsgSaveReq&) = delete;
         MsgSaveReq& operator=(const MsgSaveReq&) = delete;
         void process(QDataStream &ds) override;
+};
+
+class MsgLogin : public MsgRX {
+public:
+        explicit MsgLogin(int payload_len, WebSocketSession &ws_session) :
+                MsgRX(Id::IdMsgLogin, payload_len, ws_session)
+        {}
+        ~MsgLogin() {}
+        MsgLogin(const MsgSaveReq&) = delete;
+        MsgLogin& operator=(const MsgLogin&) = delete;
+        void process(QDataStream &ds) override;
+};
+
+class MsgLoginAck : public MsgTX {
+public:
+        explicit MsgLoginAck(WebSocketSession &ws_session) :
+                MsgTX(Id::IdMsgLoginAck, 1, ws_session)
+        {}
+        ~MsgLoginAck() {}
+        void post() override;
 };
 
 #endif // MSG_H

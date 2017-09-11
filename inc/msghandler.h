@@ -31,6 +31,8 @@ public:
 private:
         QByteArray              raw_msg;
         WebSocketSession        &ws_session;
+public:
+        std::unique_ptr<QDataStream>    ds;
 };
 
 #endif // MSGHANDLER_H
