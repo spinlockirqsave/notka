@@ -1,10 +1,28 @@
+/*
+ * Websocket.js
+ *
+ * Copyright(C) 2017, Piotr Gregor <piotrgregor@rsyncme.org>
+ *
+ * Notka Online Clipboard
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+
 var React = require('react');
 var ReactDOM = require('react-dom');
 var FL = require('./FormLogin.js');
 var FN = require('./FormNotka.js');
 
 
-var wsUri = "ws://localhost:1235";
+var wsUri = "ws://192.168.1.104:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
@@ -30,6 +48,15 @@ function check_endianness() {
         endiannes = 2;
         throw new Error("Weird ediannes!");
     }
+}
+
+function str2ab(str) {
+    var buf = new ArrayBuffer(str.length); // but should be 2 bytes for each char for Unicode
+    var bufView = new Uint8Array(buf);
+    for (var i=0, strLen=str.length; i<strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
 }
 
 /**
@@ -99,6 +126,8 @@ var WsState = {
 }
 
 var ws_state = WsState.LOGIN;
+var login_ = '';
+var password_ = '';
 
 function rx_msg_login_ack(data) {
     var raw_msg = new Uint8Array(data);
@@ -204,6 +233,8 @@ module.exports = {
         }
     },
     tx_msg_login: function(login, pass) {
+            login_ = login;
+            password_ = pass;
             var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
             var bufView32 = new Uint32Array(msg);     // by default js uses big endian
             bufView32[0] = 2;                         // MsgRX::MsgLogin (rx from server point of view)
@@ -235,6 +266,43 @@ module.exports = {
                     console.log("tx_msg_login: " + msg);
             }
     },
+    tx_msg_save_req: function() {
+            var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len
+            var bufView32 = new Uint32Array(msg);     // by default js uses big endian
+            bufView32[0] = 3;                         // MsgRX::MsgSaveReq (rx from server point of view)
+            bufView32[1] = 0;                         // payload length, 0 so far
+            if (endiannes === 0) {                    // but if this machine is le
+                    console.log("swapping");
+                    bufView32[0] = swap32(bufView32[0]);
+                    bufView32[1] = swap32(bufView32[1]);
+            }
+
+            var login_bin = new ArrayBuffer(32);
+            var bufView8 = new Uint8Array(login_bin);
+            for (var i=0, strLen=login_.length; i<strLen && i<32; i++) {
+                    bufView8[i] = login_.charCodeAt(i);
+            }
+
+            var notka = document.getElementById("NotkaTextArea").value;
+            var notka_bin = str2ab(notka);
+
+            bufView32[1] = 32 + notka.length;               // payload length = 32 byte login + notka len
+            if (endiannes === 0) {                          // but if this machine is le
+                    console.log("swapping");
+                    bufView32[1] = swap32(bufView32[1]);
+            }
+
+            msg = _appendBuffer(msg, login_bin);
+            msg = _appendBuffer(msg, notka_bin);
+
+            if (websocket != null)
+            {
+                    websocket.send(msg);
+                    console.log("tx_msg_save_req: " + msg);
+            }
+    },
+    login_: login_,
+    password_: password_,
     ws_state: ws_state,
     WsState: WsState,
 };

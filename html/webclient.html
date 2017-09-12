@@ -1,3 +1,21 @@
+<!--
+/*
+ * webclient.html
+ *
+ * Copyright(C) 2017, Piotr Gregor <piotrgregor@rsyncme.org>
+ *
+ * Notka Online Clipboard
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+-->
 <html>
 	<head>
 		<title>WebSocket Client</title>
@@ -76,7 +94,7 @@ function sendMessageBin2() {
 	}
 }
 
-var wsUri = "ws://localhost:1235";
+var wsUri = "ws://192.168.1.104:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
