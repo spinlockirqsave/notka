@@ -17,6 +17,7 @@ namespace Database {
         void close_database();
         int authenticate_user(QString login, QString password);
         bool save_notka(QString user, QByteArray notka);
+        bool get_notka(QString user, QByteArray &notka);
 }
 
 namespace Db = Database;

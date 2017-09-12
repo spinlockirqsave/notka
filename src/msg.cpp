@@ -67,10 +67,15 @@ void MsgSaveReq::process(QDataStream &ds)
 
 void MsgLogin::process(QDataStream &ds)
 {
+        MsgLoginAck ack(ws_session);
+
+        /* By default: No such user. */
+        ws_session.state = NO_SUCH_USER;
 
         if (payload_len != 64) {
                 /* Error, where is login and pass?
                  * TODO: Send error description. */
+                ack.post();
                 return;
         }
 
@@ -95,8 +100,16 @@ void MsgLogin::process(QDataStream &ds)
                 ws_session.state = WRONG_PASSWORD;
         }
 
-        MsgLoginAck ack(ws_session);
         ack.post();
+
+        if (ws_session.state == LOGGED_IN) {
+                /* Check if user has any notes and tx them if they have. */
+                QByteArray notka;
+                if (Db::get_notka(login, notka)) {
+                        MsgNotka user_stuff(ws_session, notka);
+                        user_stuff.post();
+                }
+        }
 }
 
 void MsgLoginAck::post()
@@ -112,6 +125,26 @@ void MsgLoginAck::post()
         uint8_t error_code = ws_session.state;
 
         ds << error_code;
+
+        /* TX */
+        ws_session.bin_msg_tx(raw_msg);
+
+        return;
+}
+
+void MsgNotka::post()
+{
+        /* Append the header */
+        QByteArray raw_msg;
+        QDataStream ds(&raw_msg, QIODevice::WriteOnly);
+
+        ds << payload_id;
+        /* No need to writ ethe payload_len as the ds << QByteArray
+         * serialises it's size. */
+        /* ds << payload_len; */
+
+        /* And the user's notes size (4 bytes) and text as the body. */
+        ds << notka;
 
         /* TX */
         ws_session.bin_msg_tx(raw_msg);

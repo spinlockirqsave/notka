@@ -71,19 +71,51 @@ bool Db::save_notka(QString user, QByteArray notka)
         db.transaction();
 
         QSqlQuery query(db);
-        query.prepare( "INSERT INTO notkas (user, notka) VALUES (:user, :notka) "
-                       "ON DUPLICATE KEY UPDATE notka = VALUES(notka)" );
+        query.prepare("INSERT INTO notkas (user, notka) VALUES (:user, :notka) "
+                      "ON DUPLICATE KEY UPDATE notka = VALUES(notka)");
         query.bindValue(0, user);
         query.bindValue(1, notka);
         query.exec();
 
         if (query.lastError().isValid()) {
                 qDebug() << query.lastError().text();
-                QSqlDatabase::database().rollback();
+                db.rollback();
                 return false;
         }
 
         db.commit();
+
+        return true;
+}
+
+bool Db::get_notka(QString user, QByteArray &notka)
+{
+        QMutexLocker lock(&Db::mutex);
+
+        QSqlDatabase &db = Db::instance();
+
+        db.transaction();
+
+        QSqlQuery query(db);
+        query.prepare("SELECT notka FROM notkas WHERE user = :user");
+        query.bindValue(0, user);
+        query.exec();
+
+        if (query.lastError().isValid()) {
+                qDebug() << query.lastError().text();
+                db.rollback();
+                return false;
+        }
+
+        db.commit();
+
+        if (!query.size()) {
+                /* No such user */
+                return false;
+        }
+
+        if (query.next())
+                notka = query.value(0).toByteArray();
 
         return true;
 }

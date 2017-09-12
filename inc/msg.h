@@ -47,7 +47,8 @@ struct MsgTX
         enum Id {
                 IdMsgUnknown = -1,
                 IdMsgHandshakeAck = 1,
-                IdMsgLoginAck = 2
+                IdMsgLoginAck = 2,
+                IdMsgNotka = 3
         };
 
         /**
@@ -116,4 +117,14 @@ public:
         void post() override;
 };
 
+class MsgNotka : public MsgTX {
+public:
+        explicit MsgNotka(WebSocketSession &ws_session, QByteArray &notka) :
+                MsgTX(Id::IdMsgNotka, notka.size(), ws_session), notka(notka)
+        {}
+        ~MsgNotka() {}
+        void post() override;
+private:
+        QByteArray &notka;
+};
 #endif // MSG_H

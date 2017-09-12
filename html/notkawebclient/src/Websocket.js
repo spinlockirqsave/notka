@@ -1,6 +1,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var FL = require('./FormLogin.js');
+var FN = require('./FormNotka.js');
 
 
 var wsUri = "ws://localhost:1235";
@@ -65,7 +66,11 @@ function tx_MsgSYN() {
 }
 
 function LoginOK() {
-    return <h1>OK</h1>;
+    return (
+                <div>
+                <h1>OK</h1>
+                </div>
+    );
 }
 
 function LoginFailedNoUser() {
@@ -102,6 +107,8 @@ function rx_msg_login_ack(data) {
             // Login successful.
             const element = <LoginOK />;
             ReactDOM.render(element, document.getElementById('root'));
+
+            ReactDOM.render(<FN.FormNotka />, document.getElementById('Notka-text'));
     } else if (error_code === 1) {
             // No such user.
             const element = <LoginFailedNoUser />;
@@ -121,6 +128,15 @@ function rx_msg_login_ack(data) {
     }
 }
 
+function rx_msg_notka(data) {
+    var raw_msg = new Uint8Array(data);
+    var raw_notka = raw_msg.subarray(8);
+    var dec = new TextDecoder();
+    var text = dec.decode(raw_notka);
+    FN.FormNotka.setNotka(text);
+    ReactDOM.render(<FN.FormNotka />, document.getElementById('Notka-text'));
+}
+
 function debug(message) {
     console.log(message);
 }
@@ -128,7 +144,8 @@ function debug(message) {
 var MsgTXId = {
         IdMsgUnknown            : -1,
         IdMsgHandshakeAck       : 1,
-        IdMsgLoginAck           : 2
+        IdMsgLoginAck           : 2,
+        IdMsgNotka              : 3
 }
 
 module.exports = {
@@ -167,6 +184,10 @@ module.exports = {
                 {
                         case MsgTXId.IdMsgLoginAck: {
                                 rx_msg_login_ack(evt.data);
+                                break;
+                        }
+                        case MsgTXId.IdMsgNotka: {
+                                rx_msg_notka(evt.data);
                                 break;
                         }
                         default: {
