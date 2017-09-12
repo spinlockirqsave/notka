@@ -1,5 +1,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var FL = require('./FormLogin.js');
 
 
 var wsUri = "ws://localhost:1235";
@@ -63,33 +64,6 @@ function tx_MsgSYN() {
         }
 }
 
-function rx_msg_login_ack(data) {
-    var raw_msg = new Uint8Array(data);
-    var error_code = raw_msg[8];
-    if (error_code === 0) {
-            // login successful
-            const element = <LoginOK />;
-            ReactDOM.render(element, document.getElementById('root'));
-    } else if (error_code === 1) {
-            // no such user
-            const element = <LoginFailedNoUser />;
-            ReactDOM.render(element, document.getElementById('root'));
-    } else {
-            const element = <LoginFailedWrongPass />
-            ReactDOM.render(element, document.getElementById('root'));
-    }
-}
-
-function debug(message) {
-    console.log(message);
-}
-
-var MsgTXId = {
-        IdMsgUnknown            : -1,
-        IdMsgHandshakeAck       : 1,
-        IdMsgLoginAck           : 2
-}
-
 function LoginOK() {
     return <h1>OK</h1>;
 }
@@ -110,6 +84,51 @@ function LoginFailedWrongPass() {
                 <h2>Wrong password...</h2>
                 </div>
     );
+}
+
+var WsState = {
+    LOGIN:      0,
+    LOGIN_PASS: 1,
+    LOGGED_IN:  2,
+    LOGGIN_FAIL: 3
+}
+
+var ws_state = WsState.LOGIN;
+
+function rx_msg_login_ack(data) {
+    var raw_msg = new Uint8Array(data);
+    var error_code = raw_msg[8];
+    if (error_code === 0) {
+            // Login successful.
+            const element = <LoginOK />;
+            ReactDOM.render(element, document.getElementById('root'));
+    } else if (error_code === 1) {
+            // No such user.
+            const element = <LoginFailedNoUser />;
+            ReactDOM.render(element, document.getElementById('root'));
+    } else {
+            // Wrong password.
+            var status = FL.FormLogin.getLoginState();
+            if (status === WsState.LOGIN) {
+                // Now give password.
+                FL.FormLogin.updateLoginState(WsState.LOGIN_PASS);
+                //const element = React.createElement(FL.FormLogin);
+                ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
+            } else {
+                    const element = <LoginFailedWrongPass />
+                    ReactDOM.render(element, document.getElementById('root'));
+            }
+    }
+}
+
+function debug(message) {
+    console.log(message);
+}
+
+var MsgTXId = {
+        IdMsgUnknown            : -1,
+        IdMsgHandshakeAck       : 1,
+        IdMsgLoginAck           : 2
 }
 
 module.exports = {
@@ -194,5 +213,7 @@ module.exports = {
                     websocket.send(msg);
                     console.log("tx_msg_login: " + msg);
             }
-    }
+    },
+    ws_state: ws_state,
+    WsState: WsState,
 };

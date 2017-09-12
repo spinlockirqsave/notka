@@ -11,10 +11,9 @@ function Tick() {
     ReactDOM.render(<HelloGreeting/>, document.getElementById('HelloMessage'));
 }
 
-setInterval(Tick, 30);
+setInterval(Tick, 15);
 
-const element = <FormLogin />;
-ReactDOM.render(element, document.getElementById('root'));
+ReactDOM.render(<FormLogin />, document.getElementById('root'));
 
 registerServiceWorker();
 
