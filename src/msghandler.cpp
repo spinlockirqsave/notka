@@ -62,7 +62,8 @@ void MsgHandler::run()
 {
         QMutexLocker ml(&ws_session.mutex);
 
-        qDebug() << __func__ << " " << raw_msg;
+        qDebug() << __func__ <<
+                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss") << raw_msg;
 
         std::unique_ptr<MsgRX> msg = demux_raw_msg(raw_msg);
 
