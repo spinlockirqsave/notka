@@ -10,25 +10,31 @@ In technology terms this is
         - small http server serving http/javascript content
           with React (https://facebook.github.io/react)
 
-        - C++ backend server written in Qt/MySql
+        - C++ backend server written with Qt
 
+        - MySql database
+
+So far so good - it runs.
 
 Try it
 ======
 
-There is a plan to keep continuous, online Notka service running.
-So far it is in alpha version but if you are lucky enough,
-you may be able to try it online at www.notka.online.
+There is a plan to keep continuous, online Notka service running
+which is unstable currently, though if you are lucky enough,
+you will be able to try it online at www.notka.online
+(experimental until I compile Qt server on no-graphics amazon box).
 Please login as a default user with following credentials:
 
         - user: "user"
         - password: "password"
 
-Save text, reload page or open from different place and have your notka back.  
+Save text, reload page or open from different place and have your notka back.
+If nothing happens after you tried to login - it's dynamic/static IP issue
+and I would appreciate if you let me know about it ;p 
 
 
 FEEDBACK/COMMENTS/CONTRIBUTIONS
-=================
+===============================
 
 All feedback is welcome, comments welcome, contributions welcome.
 Source:		www.github.com/spinlockirqsave/notka.git

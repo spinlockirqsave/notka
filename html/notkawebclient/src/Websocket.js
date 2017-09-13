@@ -22,7 +22,7 @@ var FL = require('./FormLogin.js');
 var FN = require('./FormNotka.js');
 
 
-var wsUri = "ws://54.71.187.53:1235";
+var wsUri = "ws://86.153.193.75:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
