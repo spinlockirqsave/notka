@@ -52,10 +52,10 @@ int Db::authenticate_user(QString login, QString password)
 {
         QSqlDatabase &db = Db::instance();
 
+        QMutexLocker lock(&Db::mutex);
+
         if (!db.isOpen() || db.isOpenError())
                 throw std::runtime_error("Database is not opened");
-
-        QMutexLocker lock(&Db::mutex);
 
         db.transaction();
 

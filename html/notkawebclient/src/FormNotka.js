@@ -67,6 +67,7 @@ export class FormNotka extends React.Component {
     return (
       <form onSubmit={this.handleSubmit}>
         <textarea id="NotkaTextArea" value={FormNotka.notka} onChange={this.handleChange} onBlur={this.handleBlur} />
+        <br/>
         <input type="submit" value="Save" />
       </form>
     );

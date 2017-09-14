@@ -16,6 +16,7 @@
  */
 
 import React, { Component } from 'react';
+import './FormLogin.css';
 
 var ws = require('./Websocket.js');
 
@@ -57,15 +58,15 @@ export class FormLogin extends Component {
   render() {
         let label = null;
         if (FormLogin.loginState === ws.WsState.LOGIN ) {
-            label = <label>
+            label = <div>
             <h1><br/>Login</h1>
             <input type="text" name="login" onChange={this.handleChange} />
-          </label>;
+          </div>;
         } else if (FormLogin.loginState === ws.WsState.LOGIN_PASS) {
-                    label = <label>
+                    label = <div>
                       <h1><br/>Password</h1>
                       <input type="text" name="pass" onChange={this.handleChange} />
-                    </label>;
+                    </div>;
         } else if (FormLogin.loginState === ws.WsState.LOGGED_IN) {
                     return LoginStatus("OK");
         } else {

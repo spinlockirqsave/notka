@@ -32,7 +32,7 @@ class App extends Component {
         </div>
         <p className="App-intro">
           Online clipboard.
-          Store your notes online and use them from wherever you want.
+          Store your notes online and use them from everywhere.
         </p>
           <div>
           <input type="text" id="inputLogin" value="login" />

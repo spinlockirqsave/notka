@@ -59,6 +59,10 @@ function str2ab(str) {
     return buf;
 }
 
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
 /**
  * Creates a new Uint8Array based on two different ArrayBuffers
  *
@@ -130,14 +134,21 @@ var login_ = '';
 var password_ = '';
 
 function rx_msg_login_ack(data) {
+    var index = require('./index.js');
+    clearInterval(index.interval_id);
     var raw_msg = new Uint8Array(data);
     var error_code = raw_msg[8];
     if (error_code === 0) {
             // Login successful.
-            const element = <LoginOK />;
-            ReactDOM.render(element, document.getElementById('root'));
+            //const element = <LoginOK />;
+            //ReactDOM.render(element, document.getElementById('root'));
 
-            ReactDOM.render(<FN.FormNotka />, document.getElementById('Notka-text'));
+            //ReactDOM.render(<div/>, document.getElementById('HelloMessage'));
+            //ReactDOM.render(<div/>, document.getElementById('root'));
+            //ReactDOM.render(<div/>, document.getElementById('container'));
+
+            ReactDOM.render(render_header, document.getElementById('container').parentNode);
+            ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
     } else if (error_code === 1) {
             // No such user.
             const element = <LoginFailedNoUser />;
@@ -157,13 +168,17 @@ function rx_msg_login_ack(data) {
     }
 }
 
+const render_header = <div><h1>Notka</h1><h2>online clipboard</h2></div>;
+
 function rx_msg_notka(data) {
     var raw_msg = new Uint8Array(data);
     var raw_notka = raw_msg.subarray(8);
-    var dec = new TextDecoder();
-    var text = dec.decode(raw_notka);
+    //var dec = new TextDecoder();
+    var text = ab2str(raw_notka);
     FN.FormNotka.setNotka(text);
-    ReactDOM.render(<FN.FormNotka />, document.getElementById('Notka-text'));
+    //ReactDOM.render(<FN.FormNotka />, document.getElementById('container'));
+    //ReactDOM.render(render_header, document.getElementById('container').parentNode);
+    ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
 }
 
 function debug(message) {

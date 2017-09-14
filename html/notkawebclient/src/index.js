@@ -29,7 +29,7 @@ function Tick() {
     ReactDOM.render(<HelloGreeting/>, document.getElementById('HelloMessage'));
 }
 
-setInterval(Tick, 15);
+//var interval_id = setInterval(Tick, 10);
 
 ReactDOM.render(<FormLogin />, document.getElementById('root'));
 
