@@ -18,6 +18,7 @@
 
 #include "../inc/globals.h"
 
+#include <QDateTime>
 #include <QDebug>
 
 
@@ -56,13 +57,43 @@ int Db::authenticate_user(QString login, QString password)
 
         QMutexLocker lock(&Db::mutex);
 
+        db.transaction();
+
         QSqlQuery query(db);
         query.exec("SELECT password FROM users WHERE user = '" + login + "'");
 
         if (query.lastError().isValid()) {
-                throw std::runtime_error("Database query error"
+                if (query.lastError().type() == QSqlError::ConnectionError) {
+                        qDebug() << __func__ <<
+                                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                                 << "Database connect error: " << query.lastError().text();
+
+                        db.rollback();
+                        db.close();
+
+                        qDebug() << __func__ <<
+                                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                                 << "Database reconnect...";
+
+                        db.open();
+
+                        if (db.lastError().isValid()) {
+                                throw std::runtime_error("Database reconnect error "
+                                                         + query.lastError().text().toStdString());
+                        }
+                        /* Redo query. */
+                        db.transaction();
+                        query.exec("SELECT password FROM users WHERE user = '" + login + "'");
+                }
+        }
+
+        if (query.lastError().isValid()) {
+                db.rollback();
+                throw std::runtime_error("Database query error "
                                          + query.lastError().text().toStdString());
         }
+
+        db.commit();
 
         if (!query.size()) {
                 /* No such user. */
