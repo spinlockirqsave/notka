@@ -63,6 +63,15 @@ export class FormLogin extends Component {
             <input type="text" name="login" onChange={this.handleChange} />
           </div>;
         } else if (FormLogin.loginState === ws.WsState.LOGIN_PASS) {
+                    /*var divStyle = {
+                        color: 'green',
+                        width: '200',
+                        //position: 'relative',
+                        top: '100%',
+                        left: '0%',
+                        margintop: '0em',
+                        marginleft: '-0em',
+                    };*/
                     label = <div>
                       <h1><br/>Password</h1>
                       <input type="text" name="pass" onChange={this.handleChange} />
@@ -74,10 +83,12 @@ export class FormLogin extends Component {
         }
 
     return (
-      <form onSubmit={this.handleSubmit}>
-        {label}
-        <input type="submit" value="Go" />
-      </form>
+      <div>
+        <form onSubmit={this.handleSubmit}>
+            {label}
+            <input type="submit" value="Go" />
+        </form>
+      </div>
     );
   }
 }

@@ -18,6 +18,8 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
+var HG = require('./HelloGreeting.js');
+var SW = require('./registerServiceWorker');
 var FL = require('./FormLogin.js');
 var FN = require('./FormNotka.js');
 
@@ -122,6 +124,15 @@ function LoginFailedWrongPass() {
     );
 }
 
+function Greeting(name) {
+  const element = (
+    <div>
+      <h1>Hello {name}</h1>
+    </div>
+  );
+  ReactDOM.render(element, document.getElementById('main'));
+}
+
 var WsState = {
     LOGIN:      0,
     LOGIN_PASS: 1,
@@ -147,14 +158,15 @@ function rx_msg_login_ack(data) {
             //ReactDOM.render(<div/>, document.getElementById('root'));
             //ReactDOM.render(<div/>, document.getElementById('container'));
 
-            ReactDOM.render(render_header, document.getElementById('container').parentNode);
+            //ReactDOM.render(render_header, document.getElementById('container').parentNode);
+            Greeting(login_);
             ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
     } else if (error_code === 1) {
             // No such user.
             const element = <LoginFailedNoUser />;
             ReactDOM.render(element, document.getElementById('root'));
     } else {
-            // Wrong password.
+            // Wrong password, but not really the first time we hit this (LOGIN state).
             var status = FL.FormLogin.getLoginState();
             if (status === WsState.LOGIN) {
                 // Now give password.
@@ -162,13 +174,12 @@ function rx_msg_login_ack(data) {
                 //const element = React.createElement(FL.FormLogin);
                 ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
             } else {
+                    // Wrong password.
                     const element = <LoginFailedWrongPass />
                     ReactDOM.render(element, document.getElementById('root'));
             }
     }
 }
-
-const render_header = <div><h1>Notka</h1><h2>online clipboard</h2></div>;
 
 function rx_msg_notka(data) {
     var raw_msg = new Uint8Array(data);

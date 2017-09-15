@@ -20,16 +20,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-import HelloGreeting from './HelloGreeting';
 import FormLogin from './FormLogin';
 import registerServiceWorker from './registerServiceWorker';
 
-
-function Tick() {
-    ReactDOM.render(<HelloGreeting/>, document.getElementById('HelloMessage'));
-}
-
-//var interval_id = setInterval(Tick, 10);
 
 ReactDOM.render(<FormLogin />, document.getElementById('root'));
 
