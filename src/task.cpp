@@ -24,9 +24,10 @@ PeriodicTask::PeriodicTask(int interval_ms)
         : Task(),
           mutex(),
           should_stop(),
-          active(true),
+          active(false),
           interval_ms(interval_ms)
 {
+        run();
 }
 
 PeriodicTask::~PeriodicTask()
@@ -35,6 +36,12 @@ PeriodicTask::~PeriodicTask()
 
 void PeriodicTask::run()
 {
+        std::unique_lock<std::mutex> lock(mutex);
+
+        if (active)
+                /* Task is already running. */
+                return;
+
         t = std::thread([this] () {
 
                 std::chrono::milliseconds wait_ms(interval_ms) ;
@@ -74,6 +81,8 @@ void PeriodicTask::run()
 
                 active = false;
         });
+
+        active = true;
 }
 
 void PeriodicTask::stop()

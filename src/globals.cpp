@@ -176,7 +176,7 @@ Db::DbReconnectTask::~DbReconnectTask()
                  << "Goodbye...";
 }
 
-bool Db::DbReconnectTask::reconnect()
+bool Db::DbReconnectTask::run_once()
 {
         emit notka.db_reconnect_signal();
 

@@ -45,8 +45,7 @@ namespace Database {
                 DbReconnectTask(int interval_ms, Notka &n);
                 ~DbReconnectTask();
         private:
-                bool reconnect();
-                bool run_once() override { return reconnect(); }
+                bool run_once() override;
                 Notka &notka;
         };
 }

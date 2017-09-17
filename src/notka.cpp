@@ -73,9 +73,9 @@ void Notka::db_reconnect()
 
 void Notka::start_db_reconnect_task()
 {
-        std::unique_ptr<Task> t {new Db::DbReconnectTask(1000*1, *this)};
-        t->run();
-        task_list.push_back(std::move(t));
+        /* Reconnect to database every 1 hour.
+         * 8 hours is default wait_timeout in MySql. */
+        task_list.push_back(std::make_unique<Db::DbReconnectTask>(1000*60*60*1, *this));
 }
 
 void Notka::ws_server_add(QWebSocketServer::SslMode mode,
