@@ -19,6 +19,8 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 
+#include <list>
+
 #include "../inc/notka.h"
 #include "ui_notka.h"
 
@@ -26,7 +28,8 @@
 Notka::Notka(QWidget *parent) :
         QMainWindow(parent),
         ui(new Ui::Notka),
-        endpoints()
+        endpoints(),
+        task_list()
 {
         ui->setupUi(this);
 
@@ -43,17 +46,28 @@ Notka::Notka(QWidget *parent) :
         /* Button Stop (server). */
         connect(ui->pb_server_stop, SIGNAL(clicked(bool)), this, SLOT(gui_cb_ws_server_stop(bool)));
 
-        if (!Db::init_database()) {
-                QSqlDatabase &db = Db::instance();
-                qDebug() << db.lastError().text();
+        if (!Db::init_database())
                 throw std::runtime_error("Database cannot be opened");
-        }
+
+        /* Start tasks. */
+        start_db_reconnect_task();
 }
 
 Notka::~Notka()
 {
+        for (auto &task : task_list) {
+                task->stop();
+        }
+
         Db::close_database();
         delete ui;
+}
+
+void Notka::start_db_reconnect_task()
+{
+        std::unique_ptr<Task> t {new Db::DbReconnectTask(1000*60*60*1)};
+        t->run();
+        task_list.push_back(std::move(t));
 }
 
 void Notka::ws_server_add(QWebSocketServer::SslMode mode,

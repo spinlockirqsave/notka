@@ -29,7 +29,8 @@ SOURCES += \
     src/msghandler.cpp \
     src/msg.cpp \
     src/websocketsession.cpp \
-    src/globals.cpp
+    src/globals.cpp \
+    src/task.cpp
 
 HEADERS  += \
     inc/notka.h \
@@ -38,7 +39,8 @@ HEADERS  += \
     inc/msghandler.h \
     inc/msg.h \
     inc/websocketsession.h \
-    inc/globals.h
+    inc/globals.h \
+    inc/task.h
 
 FORMS    += \
     ui/notka.ui

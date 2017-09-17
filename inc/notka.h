@@ -49,6 +49,9 @@ private:
         Ui::Notka *ui;
         QList<QSharedPointer<NotkaEndPoint>> endpoints;
 
+        std::list<std::unique_ptr<Task>> task_list;
+        void start_db_reconnect_task();
+
         inline void ws_server_add(QWebSocketServer::SslMode mode,
                            QHostAddress address, quint16 port);
         void ws_server_start_stop(bool start);

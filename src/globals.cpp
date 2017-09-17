@@ -22,17 +22,13 @@
 #include <QDebug>
 
 
-QSqlDatabase& Db::instance()
-{
-        static QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-        return db;
-}
+QString db_con_name = "Notka";
 
 bool Db::init_database()
 {
         QMutexLocker lock(&Database::mutex);
 
-        QSqlDatabase& db = instance();
+        QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL", db_con_name);
 
         db.setHostName("localhost");
         db.setDatabaseName("notka");
@@ -44,15 +40,22 @@ bool Db::init_database()
 
 void Db::close_database()
 {
-        QSqlDatabase& db = instance();
-        db.close();
+        QMutexLocker lock(&Database::mutex);
+        {
+                QSqlDatabase db = QSqlDatabase::database(db_con_name);
+                if (db.isOpen()) {
+                        db.close();
+                }
+                db = QSqlDatabase();
+        }
+        QSqlDatabase::removeDatabase(db_con_name);
 }
 
 int Db::authenticate_user(QString login, QString password)
 {
-        QSqlDatabase &db = Db::instance();
-
         QMutexLocker lock(&Db::mutex);
+
+        QSqlDatabase db = QSqlDatabase::database(db_con_name);
 
         if (!db.isOpen() || db.isOpenError())
                 throw std::runtime_error("Database is not opened");
@@ -61,31 +64,6 @@ int Db::authenticate_user(QString login, QString password)
 
         QSqlQuery query(db);
         query.exec("SELECT password FROM users WHERE user = '" + login + "'");
-
-        if (query.lastError().isValid()) {
-                if (query.lastError().type() == QSqlError::ConnectionError) {
-                        qDebug() << __func__ <<
-                                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
-                                 << "Database connect error: " << query.lastError().text();
-
-                        db.rollback();
-                        db.close();
-
-                        qDebug() << __func__ <<
-                                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
-                                 << "Database reconnect...";
-
-                        db.open();
-
-                        if (db.lastError().isValid()) {
-                                throw std::runtime_error("Database reconnect error "
-                                                         + query.lastError().text().toStdString());
-                        }
-                        /* Redo query. */
-                        db.transaction();
-                        query.exec("SELECT password FROM users WHERE user = '" + login + "'");
-                }
-        }
 
         if (query.lastError().isValid()) {
                 db.rollback();
@@ -115,7 +93,7 @@ bool Db::save_notka(QString user, QByteArray notka)
 {
         QMutexLocker lock(&Db::mutex);
 
-        QSqlDatabase &db = Db::instance();
+        QSqlDatabase db = QSqlDatabase::database(db_con_name);
 
         db.transaction();
 
@@ -141,7 +119,7 @@ bool Db::get_notka(QString user, QByteArray &notka)
 {
         QMutexLocker lock(&Db::mutex);
 
-        QSqlDatabase &db = Db::instance();
+        QSqlDatabase db = QSqlDatabase::database(db_con_name);
 
         db.transaction();
 
@@ -167,4 +145,32 @@ bool Db::get_notka(QString user, QByteArray &notka)
                 notka = query.value(0).toByteArray();
 
         return true;
+}
+
+Db::DbReconnectTask::DbReconnectTask(int interval_ms)
+        : PeriodicTask(interval_ms)
+{}
+
+Db::DbReconnectTask::~DbReconnectTask()
+{
+        qDebug() << __func__ << QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                 << "Goodbye...";
+}
+
+bool Db::DbReconnectTask::reconnect()
+{
+        qDebug() << __func__ << QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                 << "Database reopening task...";
+
+        QMutexLocker lock(&Db::mutex);
+
+        QSqlDatabase db = QSqlDatabase::database(db_con_name);
+        db.open();
+
+        if (db.lastError().isValid()) {
+                throw std::runtime_error("Database reconnect error "
+                                         + db.lastError().text().toStdString());
+        }
+
+        return false;
 }

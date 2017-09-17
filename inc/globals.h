@@ -26,16 +26,26 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
+#include "../inc/task.h"
+
 
 namespace Database {
         extern QMutex mutex;
 
-        QSqlDatabase& instance();
         bool init_database();
         void close_database();
         int authenticate_user(QString login, QString password);
         bool save_notka(QString user, QByteArray notka);
         bool get_notka(QString user, QByteArray &notka);
+
+        class DbReconnectTask : public PeriodicTask {
+        public:
+                DbReconnectTask(int interval_ms);
+                ~DbReconnectTask();
+        private:
+                bool reconnect();
+                bool run_once() override { return reconnect(); }
+        };
 }
 
 namespace Db = Database;
