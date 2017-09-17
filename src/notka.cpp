@@ -46,6 +46,9 @@ Notka::Notka(QWidget *parent) :
         /* Button Stop (server). */
         connect(ui->pb_server_stop, SIGNAL(clicked(bool)), this, SLOT(gui_cb_ws_server_stop(bool)));
 
+        /* Signals. */
+        connect(this, SIGNAL(db_reconnect_signal()), this, SLOT(db_reconnect()));
+
         if (!Db::init_database())
                 throw std::runtime_error("Database cannot be opened");
 
@@ -63,9 +66,14 @@ Notka::~Notka()
         delete ui;
 }
 
+void Notka::db_reconnect()
+{
+        Db::reconnect();
+}
+
 void Notka::start_db_reconnect_task()
 {
-        std::unique_ptr<Task> t {new Db::DbReconnectTask(1000*60*60*1)};
+        std::unique_ptr<Task> t {new Db::DbReconnectTask(1000*1, *this)};
         t->run();
         task_list.push_back(std::move(t));
 }
@@ -142,3 +150,5 @@ void Notka::closeEvent(QCloseEvent *e)
     ws_server_start_stop(0);
     e->accept();
 }
+
+/* Signals. */

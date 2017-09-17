@@ -44,6 +44,7 @@ public:
 
 public slots:
         void closeEvent(QCloseEvent *e) override;
+        void db_reconnect();
 
 private:
         Ui::Notka *ui;
@@ -64,6 +65,9 @@ private slots:
         void gui_cb_ws_server_add(bool checked);
         void gui_cb_ws_server_start(bool checked);
         void gui_cb_ws_server_stop(bool checked);
+
+signals:
+        void db_reconnect_signal();
 };
 
 #endif // NOTKA_H

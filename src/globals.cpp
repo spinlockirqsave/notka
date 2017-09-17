@@ -16,6 +16,7 @@
  */
 
 
+#include "../inc/notka.h"
 #include "../inc/globals.h"
 
 #include <QDateTime>
@@ -147,8 +148,26 @@ bool Db::get_notka(QString user, QByteArray &notka)
         return true;
 }
 
-Db::DbReconnectTask::DbReconnectTask(int interval_ms)
-        : PeriodicTask(interval_ms)
+void Db::reconnect()
+{
+        qDebug() << __func__ << QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                 << "Database reopening task...";
+
+        close_database();
+        init_database();
+
+        {
+                QSqlDatabase db = QSqlDatabase::database(db_con_name);
+
+                if (db.lastError().isValid()) {
+                        throw std::runtime_error("Database reconnect error "
+                                         + db.lastError().text().toStdString());
+                }
+        }
+}
+
+Db::DbReconnectTask::DbReconnectTask(int interval_ms, Notka &n)
+        : PeriodicTask(interval_ms), notka(n)
 {}
 
 Db::DbReconnectTask::~DbReconnectTask()
@@ -159,18 +178,7 @@ Db::DbReconnectTask::~DbReconnectTask()
 
 bool Db::DbReconnectTask::reconnect()
 {
-        qDebug() << __func__ << QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
-                 << "Database reopening task...";
-
-        QMutexLocker lock(&Db::mutex);
-
-        QSqlDatabase db = QSqlDatabase::database(db_con_name);
-        db.open();
-
-        if (db.lastError().isValid()) {
-                throw std::runtime_error("Database reconnect error "
-                                         + db.lastError().text().toStdString());
-        }
+        emit notka.db_reconnect_signal();
 
         return false;
 }
