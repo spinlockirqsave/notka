@@ -36,6 +36,7 @@ namespace Database {
         bool init_database();
         void close_database();
         int authenticate_user(QString login, QString password);
+        int register_user(QString login, QString password);
         bool save_notka(QString user, QByteArray notka);
         bool get_notka(QString user, QByteArray &notka);
         void reconnect();

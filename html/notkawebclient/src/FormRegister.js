@@ -1,5 +1,5 @@
 /*
- * index.js
+ * FormRegister.js
  *
  * Copyright(C) 2017, Piotr Gregor <piotrgregor@rsyncme.org>
  *
@@ -15,19 +15,4 @@
  * GNU General Public License for more details.
  */
 
-
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-
-import FormLogin from './FormLogin';
-import FormRegister from './FormRegister';
-import registerServiceWorker from './registerServiceWorker';
-
-
-ReactDOM.render(<FormLogin />, document.getElementById('root'));
-
-registerServiceWorker();
-
-var ws = require('./Websocket.js');
-ws.initWebSocket();
+//import React, { Component } from 'react';

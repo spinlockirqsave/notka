@@ -18,6 +18,8 @@
 
 #include "../inc/msg.h"
 
+#include <QDebug>
+
 
 QDataStream& operator>>(QDataStream &ds, std::unique_ptr<MsgRX> &msg)
 {
@@ -87,9 +89,6 @@ void MsgLogin::process(QDataStream &ds)
 {
         MsgLoginAck ack(ws_session);
 
-        /* By default: No such user. */
-        ws_session.state = NO_SUCH_USER;
-
         if (payload_len != 64) {
                 /* Error, where is login and pass?
                  * TODO: Send error description. */
@@ -107,15 +106,29 @@ void MsgLogin::process(QDataStream &ds)
 
         ws_session.user = login;
 
-        int res = Db::authenticate_user(login, password);
-        if (res == 0) {
-                ws_session.state = LOGGED_IN;
-        } else if (res == 1) {
-                /* No such user. */
-                ws_session.state = NO_SUCH_USER;
+        if (ws_session.state == NO_SUCH_USER) {
+                /* Registration. */
+                try {
+                        Db::register_user(login, password);
+                        ws_session.state = REGISTERED;
+                } catch (std::exception &e) {
+                        ws_session.state = REGISTER_FAIL;
+                        qDebug() << __func__ <<
+                                    QDateTime::currentDateTime().toString("yyyy-mm-dd hh:mm:ss")
+                                    << "User " << login << " tried to register, but database "
+                                    "transaction failed! [" << e.what() << "]";
+                }
         } else {
-                /* Wrong Password. */
-                ws_session.state = WRONG_PASSWORD;
+                int res = Db::authenticate_user(login, password);
+                if (res == 0) {
+                        ws_session.state = LOGGED_IN;
+                } else if (res == 1) {
+                        /* No such user. */
+                        ws_session.state = NO_SUCH_USER;
+                } else {
+                        /* Wrong Password. */
+                        ws_session.state = WRONG_PASSWORD;
+                }
         }
 
         ack.post();

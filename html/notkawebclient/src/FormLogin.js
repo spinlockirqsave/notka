@@ -18,6 +18,8 @@
 import React, { Component } from 'react';
 import './FormLogin.css';
 
+                import './FormRegister.css';
+
 var ws = require('./Websocket.js');
 
 function LoginStatus(text) {
@@ -25,10 +27,13 @@ function LoginStatus(text) {
 }
 
 export class FormLogin extends Component {
+
   constructor(props) {
     super(props);
-    this.state = {login: '', pass: '' };
-
+    this.state = {login: '', pass: '', init: 0 };
+    if (this.state.init) {
+        this.state.init++;
+    }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -39,11 +44,14 @@ export class FormLogin extends Component {
         var newState = {};
         newState[event.target.name] = event.target.value;
         this.setState(newState);
+        //this.state[event.target.name] = event.target.value;
   }
 
   handleSubmit(event) {
     //alert('Login: ' + this.state.login + ' Pass: ' + this.state.pass);
     event.preventDefault();
+    if (FormLogin.loginState === ws.WsState.LOGIN_PASS)
+        this.state.pass = this.refs.btnPass.value;
     ws.tx_msg_login(this.state.login, this.state.pass);
   }
 
@@ -74,22 +82,35 @@ export class FormLogin extends Component {
                     };*/
                     label = <div>
                       <h1><br/>Password</h1>
-                      <input type="text" name="pass" onChange={this.handleChange} />
+                      <input type="text" name="pass" onChange={this.handleChange} ref="btnPass" />
                     </div>;
         } else if (FormLogin.loginState === ws.WsState.LOGGED_IN) {
                     return LoginStatus("OK");
-        } else {
+        } else if (FormLogin.loginState === ws.WsState.LOGGED_FAIL) {
                     return LoginStatus("Logging failed");
+        } else if (FormLogin.loginState === ws.WsState.REGISTER ) {
+                    label = <div>
+                        <h1><br/>Register</h1><br/>
+                        User {this.state.login} is not registered. Please register.
+                        <h1><br/>Login</h1>
+                        <input type="text" name="login" onChange={this.handleChange} />
+                        <h1><br/>Password</h1>
+                        <input type="text" name="pass" onChange={this.handleChange} />
+                        </div>;
+        } else if (FormLogin.loginState === ws.WsState.REGISTERED) {
+                    return LoginStatus("OK. You are registered as " + this.state.login);
+        } else {
+                    return LoginStatus("Sorry, but registration failed. Please try again.");
         }
 
-    return (
-      <div>
-        <form onSubmit={this.handleSubmit}>
-            {label}
-            <input type="submit" value="Go" />
-        </form>
-      </div>
-    );
+        return (
+            <div>
+                <form onSubmit={this.handleSubmit}>
+                {label}
+                <input type="submit" value="Go" />
+                </form>
+            </div>
+        );
   }
 }
 

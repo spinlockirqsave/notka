@@ -53,7 +53,7 @@ void Db::close_database()
 }
 
 int Db::authenticate_user(QString login, QString password)
-{
+{qDebug() << "Auth: [" << login << "] [" << password << "]";
         QMutexLocker lock(&Db::mutex);
 
         QSqlDatabase db = QSqlDatabase::database(db_con_name);
@@ -88,6 +88,32 @@ int Db::authenticate_user(QString login, QString password)
 
         /* Wrong password. */
         return 2;
+}
+
+int Db::register_user(QString login, QString password)
+{
+        QMutexLocker lock(&Db::mutex);
+        QSqlDatabase db = QSqlDatabase::database(db_con_name);
+        if (!db.isOpen() || db.isOpenError())
+                throw std::runtime_error("Databse is not opened");
+
+        db.transaction();
+        QSqlQuery query(db);
+        query.prepare("INSERT INTO users VALUES (:user, :password)");
+        query.bindValue(0, login);
+        query.bindValue(1, password);
+
+        query.exec();
+
+        if (query.lastError().isValid()) {
+                db.rollback();
+                throw std::runtime_error("Database query error "
+                                         + query.lastError().text().toStdString());
+        }
+
+        db.commit();
+        return 0;
+
 }
 
 bool Db::save_notka(QString user, QByteArray notka)

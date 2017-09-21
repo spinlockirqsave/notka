@@ -21,6 +21,7 @@ var ReactDOM = require('react-dom');
 var HG = require('./HelloGreeting.js');
 var SW = require('./registerServiceWorker');
 var FL = require('./FormLogin.js');
+//var FR = require('./FormRegister.js');
 var FN = require('./FormNotka.js');
 
 
@@ -106,15 +107,6 @@ function LoginOK() {
     );
 }
 
-function LoginFailedNoUser() {
-    return (
-                <div>
-                <h1>Login failed</h1>
-                <h2>Register?</h2>
-                </div>
-    );
-}
-
 function LoginFailedWrongPass() {
     return (
                 <div>
@@ -137,7 +129,18 @@ var WsState = {
     LOGIN:      0,
     LOGIN_PASS: 1,
     LOGGED_IN:  2,
-    LOGGIN_FAIL: 3
+    LOGGIN_FAIL: 3,
+    REGISTER: 4,
+    REGISTERED: 5
+}
+
+var SrvLoginState = {
+    INIT: 0,
+    LOGGED_IN: 1,
+    NO_SUCH_USER: 2,
+    WRONG_PASSWORD: 3,
+    REGISTERED: 4,
+    REGISTER_FAIL: 5
 }
 
 var ws_state = WsState.LOGIN;
@@ -149,23 +152,15 @@ function rx_msg_login_ack(data) {
     clearInterval(index.interval_id);
     var raw_msg = new Uint8Array(data);
     var error_code = raw_msg[8];
-    if (error_code === 0) {
+    if (error_code === SrvLoginState.LOGGED_IN) {
             // Login successful.
-            //const element = <LoginOK />;
-            //ReactDOM.render(element, document.getElementById('root'));
-
-            //ReactDOM.render(<div/>, document.getElementById('HelloMessage'));
-            //ReactDOM.render(<div/>, document.getElementById('root'));
-            //ReactDOM.render(<div/>, document.getElementById('container'));
-
-            //ReactDOM.render(render_header, document.getElementById('container').parentNode);
             Greeting(login_);
             ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
-    } else if (error_code === 1) {
+    } else if (error_code === SrvLoginState.NO_SUCH_USER) {
             // No such user.
-            const element = <LoginFailedNoUser />;
-            ReactDOM.render(element, document.getElementById('root'));
-    } else {
+            FL.FormLogin.updateLoginState(WsState.REGISTER);
+            ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
+    } else if (error_code === SrvLoginState.WRONG_PASSWORD) {
             // Wrong password, but not really the first time we hit this (LOGIN state).
             var status = FL.FormLogin.getLoginState();
             if (status === WsState.LOGIN) {
@@ -175,9 +170,20 @@ function rx_msg_login_ack(data) {
                 ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
             } else {
                     // Wrong password.
+                    FL.FormLogin.updateLoginState(WsState.LOGIN_FAIL);
                     const element = <LoginFailedWrongPass />
                     ReactDOM.render(element, document.getElementById('root'));
             }
+    } else if (error_code === SrvLoginState.REGISTERED) {
+            FL.FormLogin.updateLoginState(WsState.REGISTERED);
+            ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
+    } else if (error_code === SrvLoginState.REGISTER_FAIL) {
+            FL.FormLogin.updateLoginState(WsState.REGISTER_FAIL);
+            ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
+    } else {
+        alert("Unknown login state response received...")
+        FL.FormLogin.updateLoginState(WsState.REGISTER_FAIL);
+        ReactDOM.render(<FL.FormLogin />, document.getElementById('root'));
     }
 }
 

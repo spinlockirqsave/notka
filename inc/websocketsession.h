@@ -35,9 +35,12 @@ class MsgHandler;
 
 
 enum WebSocketSessionState {
-        LOGGED_IN = 0,
-        NO_SUCH_USER = 1,
-        WRONG_PASSWORD = 2
+        INIT = 0,
+        LOGGED_IN = 1,
+        NO_SUCH_USER = 2,
+        WRONG_PASSWORD = 3,
+        REGISTERED = 4,
+        REGISTER_FAIL = 5
 };
 
 class WebSocketSession : public QObject

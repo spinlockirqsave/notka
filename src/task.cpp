@@ -65,18 +65,17 @@ void PeriodicTask::run()
                                 now = std::chrono::steady_clock::now();
                         }
 
+                        /* Reset the timeout. */
+                        end = now + std::chrono::milliseconds(interval_ms);
+
                         /* Run the task. */
                         lock.unlock();
                         volatile bool should_stop_hint = run_once();
-                        if (should_stop_hint)
-                                break;
-
-                        /* Reset the timeout. */
-                        now = std::chrono::steady_clock::now();
-                        end = now + std::chrono::milliseconds(interval_ms);
 
                         lock.lock();
-                        //std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
+
+                        if (should_stop_hint)
+                                break;
                 }
 
                 active = false;
