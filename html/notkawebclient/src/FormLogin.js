@@ -18,7 +18,6 @@
 import React, { Component } from 'react';
 import './FormLogin.css';
 
-                import './FormRegister.css';
 
 var ws = require('./Websocket.js');
 
