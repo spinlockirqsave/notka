@@ -27,6 +27,13 @@ QDataStream& operator>>(QDataStream &ds, std::unique_ptr<MsgRX> &msg)
         return ds;
 }
 
+QString MsgRX::read_raw_string(QDataStream &ds, int bytes) const
+{
+        char buf[bytes];
+        ds.readRawData(buf, sizeof(buf));
+
+        return QString(buf);
+}
 void MsgTX::post()
 {
         QByteArray raw_msg;
@@ -65,23 +72,19 @@ void MsgSaveReq::process(QDataStream &ds)
                 return;
         }
 
-        char login_buf[32];
-        ds.readRawData(login_buf, sizeof(login_buf));
-        QString login(login_buf);
+        QString login = read_raw_string(ds, 32);
 
-        if (Db::authenticate_user(login, "password") == 0) {
-                char* bytes = new char[text_len];
-                ds.readRawData(bytes, text_len);
-                QByteArray notka = QByteArray::fromRawData(bytes, text_len);
+        char* bytes = new char[text_len];
+        ds.readRawData(bytes, text_len);
+        QByteArray notka = QByteArray::fromRawData(bytes, text_len);
 
-                bool ok = Db::save_notka(login, notka);
+        bool ok = Db::save_notka(login, notka);
 
-                if (!ok) {
-                        /* TODO: send error description. */
-                        return;
-                }
-                /* TODO: tx error OK. */
+        if (!ok) {
+                /* TODO: send error description. */
+                return;
         }
+        /* TODO: tx error OK. */
         /* TODO: tx error description. */
 }
 
@@ -96,13 +99,8 @@ void MsgLogin::process(QDataStream &ds)
                 return;
         }
 
-        char login_buf[32];
-        ds.readRawData(login_buf, sizeof(login_buf));
-        QString login(login_buf);
-
-        char pass_buf[32];
-        ds.readRawData(pass_buf, sizeof(pass_buf));
-        QString password(pass_buf);
+        QString login = read_raw_string(ds, 32);
+        QString password = read_raw_string(ds, 32);
 
         ws_session.user = login;
 

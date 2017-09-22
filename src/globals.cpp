@@ -54,6 +54,10 @@ void Db::close_database()
 
 int Db::authenticate_user(QString login, QString password)
 {qDebug() << "Auth: [" << login << "] [" << password << "]";
+
+        if (login.isEmpty() || login.isNull())
+                return 1;
+
         QMutexLocker lock(&Db::mutex);
 
         QSqlDatabase db = QSqlDatabase::database(db_con_name);
@@ -92,6 +96,9 @@ int Db::authenticate_user(QString login, QString password)
 
 int Db::register_user(QString login, QString password)
 {
+        if (login.isEmpty() || login.isNull())
+                throw std::runtime_error("Login is empty or null");
+
         QMutexLocker lock(&Db::mutex);
         QSqlDatabase db = QSqlDatabase::database(db_con_name);
         if (!db.isOpen() || db.isOpenError())

@@ -55,6 +55,9 @@ struct MsgRX
         MsgRX(const MsgRX&) = delete;
         MsgRX& operator=(const MsgRX&) = delete;
 
+protected:
+        QString read_raw_string(QDataStream &ds, int bytes) const;
+
         Id                      payload_id;
         int                     payload_len;
         WebSocketSession        &ws_session;
@@ -80,6 +83,8 @@ struct MsgTX
                 ws_session(ws_session)
         {}
         virtual ~MsgTX() {}
+
+protected:
 
         Id                      payload_id;
         int                     payload_len;
