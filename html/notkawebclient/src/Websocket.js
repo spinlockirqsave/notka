@@ -206,7 +206,8 @@ var MsgTXId = {
         IdMsgUnknown            : -1,
         IdMsgHandshakeAck       : 1,
         IdMsgLoginAck           : 2,
-        IdMsgNotka              : 3
+        IdMsgSaveReqAck         : 3,
+        IdMsgNotka              : 4
 }
 
 module.exports = {

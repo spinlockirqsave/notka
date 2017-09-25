@@ -69,7 +69,8 @@ struct MsgTX
                 IdMsgUnknown = -1,
                 IdMsgHandshakeAck = 1,
                 IdMsgLoginAck = 2,
-                IdMsgNotka = 3
+                IdMsgSaveReqAck = 3,
+                IdMsgNotka = 4
         };
 
         /**
@@ -138,6 +139,18 @@ public:
         {}
         ~MsgLoginAck() {}
         void post() override;
+};
+
+class MsgSaveReqAck : public MsgTX {
+public:
+        explicit MsgSaveReqAck(WebSocketSession &ws_session, uint8_t error_code) :
+                MsgTX(Id::IdMsgSaveReqAck, 1, ws_session), error_code(error_code)
+        {}
+        ~MsgSaveReqAck() {}
+        void post() override;
+        void post(uint8_t error_code) { this->error_code = error_code; post(); }
+private:
+        uint8_t error_code;
 };
 
 class MsgNotka : public MsgTX {

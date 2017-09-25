@@ -53,7 +53,8 @@ void Db::close_database()
 }
 
 int Db::authenticate_user(QString login, QString password)
-{qDebug() << "Auth: [" << login << "] [" << password << "]";
+{
+        qDebug() << "Auth: [" << login << "] [" << password << "]";
 
         if (login.isEmpty() || login.isNull())
                 return 1;

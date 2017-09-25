@@ -157,8 +157,18 @@ void MsgLoginAck::post()
 
         /* TX */
         ws_session.bin_msg_tx(raw_msg);
+}
 
-        return;
+void MsgSaveReqAck::post()
+{
+        QByteArray raw_msg;
+        QDataStream ds(&raw_msg, QIODevice::WriteOnly);
+
+        ds << payload_id;
+        ds << payload_len;
+        ds << error_code;
+
+        ws_session.bin_msg_tx(raw_msg);
 }
 
 void MsgNotka::post()
@@ -168,7 +178,7 @@ void MsgNotka::post()
         QDataStream ds(&raw_msg, QIODevice::WriteOnly);
 
         ds << payload_id;
-        /* No need to writ ethe payload_len as the ds << QByteArray
+        /* No need to write the payload_len as the ds << QByteArray
          * serialises it's size. */
         /* ds << payload_len; */
 
@@ -177,6 +187,4 @@ void MsgNotka::post()
 
         /* TX */
         ws_session.bin_msg_tx(raw_msg);
-
-        return;
 }
