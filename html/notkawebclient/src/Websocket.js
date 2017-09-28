@@ -18,6 +18,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
+var RA =  require('react-alert');
 var HG = require('./HelloGreeting.js');
 var SW = require('./registerServiceWorker');
 var FL = require('./FormLogin.js');
@@ -25,7 +26,7 @@ var FL = require('./FormLogin.js');
 var FN = require('./FormNotka.js');
 
 
-var wsUri = "ws://86.153.193.75:1235";
+var wsUri = "ws://31.54.230.95:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
@@ -198,6 +199,35 @@ function rx_msg_notka(data) {
     ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
 }
 
+var MsgErr = {
+    Ok: 0,
+    Fail: 1,
+    ErrorTextLen: 2
+}
+
+function rx_msg_save_req_ack(data) {
+    var raw_msg = new Uint8Array(data);
+    var error_code = raw_msg[8];
+
+    var fn = ReactDOM.render(React.createElement(FN.FormNotka), document.getElementById('Notka-text'));
+    
+    switch (error_code) {
+
+        case MsgErr.Ok: {
+            fn.alert_ok();
+            break;
+        }
+        case MsgErr.ErrorTextLen: {
+            fn.alert_err();
+            break;
+        }
+        default: {          /* Fail */
+            fn.alert_fail();
+            break;
+        }
+    }
+}
+
 function debug(message) {
     console.log(message);
 }
@@ -252,6 +282,11 @@ module.exports = {
                                 rx_msg_notka(evt.data);
                                 break;
                         }
+                        case MsgTXId.IdMsgSaveReqAck: {
+                                rx_msg_save_req_ack(evt.data);
+                                break;
+                        }
+
                         default: {
                                 break;
                         }
@@ -266,6 +301,11 @@ module.exports = {
         }
     },
     tx_msg_login: function(login, pass) {
+            if (websocket.readyState != 1) {
+                alert("We are sorry, but we cannot connect to the server...");
+                return;
+            }
+
             login_ = login;
             password_ = pass;
             var msg = new ArrayBuffer(8);             // 4 bytes - id, 4 - len

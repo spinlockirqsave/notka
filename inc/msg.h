@@ -35,6 +35,12 @@ class MsgRX;
  */
 QDataStream& operator>>(QDataStream &ds, std::unique_ptr<MsgRX> &msg);
 
+enum MsgErr {
+        Ok = 0,
+        Fail = 1,
+        ErrorTextLen = 2                /* Text length < 0 */
+};
+
 struct MsgRX
 {
         enum Id {
@@ -143,7 +149,7 @@ public:
 
 class MsgSaveReqAck : public MsgTX {
 public:
-        explicit MsgSaveReqAck(WebSocketSession &ws_session, uint8_t error_code) :
+        explicit MsgSaveReqAck(WebSocketSession &ws_session, uint8_t error_code = MsgErr::Ok) :
                 MsgTX(Id::IdMsgSaveReqAck, 1, ws_session), error_code(error_code)
         {}
         ~MsgSaveReqAck() {}

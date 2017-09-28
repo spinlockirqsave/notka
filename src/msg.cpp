@@ -63,12 +63,11 @@ void MsgHandshakeAck::post()
 
 void MsgSaveReq::process(QDataStream &ds)
 {
-
+        MsgSaveReqAck ack(ws_session);
         int text_len = payload_len - 32;        /* not including login field */
 
         if (text_len < 0) {
-                /* Nothing to save, error.
-                 * TODO: Send error description. */
+                ack.post(MsgErr::ErrorTextLen);
                 return;
         }
 
@@ -81,11 +80,11 @@ void MsgSaveReq::process(QDataStream &ds)
         bool ok = Db::save_notka(login, notka);
 
         if (!ok) {
-                /* TODO: send error description. */
+                ack.post(MsgErr::Fail);
                 return;
         }
-        /* TODO: tx error OK. */
-        /* TODO: tx error description. */
+
+        ack.post(MsgErr::Ok);
 }
 
 void MsgLogin::process(QDataStream &ds)
