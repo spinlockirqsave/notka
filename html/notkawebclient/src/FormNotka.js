@@ -22,8 +22,6 @@ import './FormNotka.css';
 import AlertContainer from 'react-alert';
 
 
-var ws = require('./Websocket.js');
-
 export class FormNotka extends React.Component {
   constructor(props) {
     super(props);

@@ -21,7 +21,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 import FormLogin from './FormLogin';
-import FormRegister from './FormRegister';
 import registerServiceWorker from './registerServiceWorker';
 
 

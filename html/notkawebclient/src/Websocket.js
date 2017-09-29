@@ -18,15 +18,12 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var RA =  require('react-alert');
-var HG = require('./HelloGreeting.js');
-var SW = require('./registerServiceWorker');
+
 var FL = require('./FormLogin.js');
-//var FR = require('./FormRegister.js');
 var FN = require('./FormNotka.js');
 
 
-var wsUri = "ws://31.54.230.95:1235";
+var wsUri = "ws://86.153.196.240:1235";
 var websocket = null;
 var endiannes = 0;      // 0 - le, 1 - be
 
@@ -98,14 +95,6 @@ function tx_MsgSYN() {
                 console.log( "sent MsgSYN :", '"'+msg+'"' );
                 debug(msg);
         }
-}
-
-function LoginOK() {
-    return (
-                <div>
-                <h1>OK</h1>
-                </div>
-    );
 }
 
 function LoginFailedWrongPass() {
@@ -301,7 +290,7 @@ module.exports = {
         }
     },
     tx_msg_login: function(login, pass) {
-            if (websocket.readyState != 1) {
+            if (websocket.readyState !== 1) {
                 alert("We are sorry, but we cannot connect to the server...");
                 return;
             }
