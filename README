@@ -14,29 +14,26 @@ In technology terms this is
 
         - MySql database
 
-So far so good - it runs.
 
 Try it
 ======
 
-There is a plan to keep continuous, online Notka service running
-which is unstable currently, though if you are lucky enough,
-you will be able to try it online at www.notka.online
-(experimental until I compile Qt server on no-graphics amazon box).
-Please login as a default user with following credentials:
+Try it online at www.notka.online
+Please register or login as a default user with following credentials:
 
         - user: "user"
         - password: "password"
 
-Save text, reload page or open from different place and have your notka back.
-If nothing happens after you tried to login - it's dynamic/static IP issue
-and I would appreciate if you let me know about it ;p 
+It is also possible to register in login-only, no passowrd mode.
+Save text, reload the page or open it from different place
+and have your notka back.
 
 
 FEEDBACK/COMMENTS/CONTRIBUTIONS
 ===============================
 
-All feedback is welcome, comments welcome, contributions welcome.
+All feedback is welcome, constructive comments are welcome,
+useful contributions are welcome.
 Source:		www.github.com/spinlockirqsave/notka.git
 
 
